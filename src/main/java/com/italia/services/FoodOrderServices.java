@@ -50,7 +50,7 @@ public class FoodOrderServices {
 		
 		List<FoodOrder> itemsUnpaid = new ArrayList<FoodOrder>(); //FoodOrder.retrieve(" AND iscompleted="+ OrderStatus.FOR_SERVING.getId() +" ORDER BY orid DESC LIMIT 100", new String[0]);
 		
-		List<FoodOrder> tmpItems =  FoodOrder.retrieve(" ORDER BY orid DESC LIMIT 100", new String[0]);
+		List<FoodOrder> tmpItems =  FoodOrder.retrieve(" ORDER BY orid DESC LIMIT 1000", new String[0]);
 		List<FoodOrder> items = new ArrayList<FoodOrder>();
 		for(FoodOrder order : tmpItems) {
 			if(OrderStatus.FOR_SERVING.getId()==order.getIsCompleted()) {

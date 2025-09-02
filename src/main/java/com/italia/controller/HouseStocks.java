@@ -32,6 +32,30 @@ public class HouseStocks {
 	
 	private Stocks stocksId;
 	
+	public static boolean isStockIdExist(long id){
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		boolean result = false;
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement("SELECT sid FROM housestocks WHERE sid=?");
+		ps.setLong(1, id);
+		rs = ps.executeQuery();
+		
+		if(rs.next()){
+			result=true;
+		}
+		
+		rs.close();
+		ps.close();
+		DBConnect.close(conn);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
 	public static List<HouseStocks> getStocksAll(){
 		List<HouseStocks> kitchens = new ArrayList<HouseStocks>();
 		Connection conn = null;

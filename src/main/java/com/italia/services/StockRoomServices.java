@@ -2,9 +2,16 @@ package com.italia.services;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 
+import com.italia.controller.HouseStocks;
+import com.italia.controller.Kitchen;
+import com.italia.controller.KitchenStocks;
+import com.italia.controller.RestoStocks;
 import com.italia.controller.Stocks;
+import com.italia.controller.SupplierPayables;
+import com.italia.enm.Department;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -84,6 +91,8 @@ public class StockRoomServices {
 		return Response.created(uri).build();
 	}
 	
+	
+	
 	@PUT
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
@@ -113,4 +122,116 @@ public class StockRoomServices {
 		}
 	}
 	
-}
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("stocks")
+	public Response stock(Stocks stocks) throws URISyntaxException {
+		System.out.println("POST");
+		int departmentId = Integer.valueOf(stocks.getBarcode());
+		
+		if(Department.KITCHEN.getId()==departmentId) {
+			
+			boolean isExistStock = KitchenStocks.isStockIdExist(stocks.getId());
+			
+			if(!isExistStock) {
+			KitchenStocks.builder()
+					.id(0)
+					.quantity(1)
+					.isActive(1)
+					.hasUpdate(stocks.getHasUpdate())
+					.stocksId(Stocks.builder().id(stocks.getId()).build())
+					.build()
+					.save();
+			}
+		}else if(Department.RESTAURANT.getId()==departmentId) {
+			
+			boolean isExistStock = RestoStocks.isStockIdExist(stocks.getId());
+			
+			if(!isExistStock) {
+			RestoStocks.builder()
+			.id(0)
+			.quantity(1)
+			.isActive(1)
+			.stock(Stocks.builder().id(stocks.getId()).build())
+			.hasUpdate(stocks.getHasUpdate())
+			.build()
+			.save();
+			}
+		}else if(Department.HOUSEKEEPING.getId()==departmentId) {
+			boolean isExistStock = HouseStocks.isStockIdExist(stocks.getId());
+			
+			if(!isExistStock) {
+			HouseStocks.builder()
+			.id(0)
+			.quantity(1)
+			.isActive(1)
+			.hasUpdate(stocks.getHasUpdate())
+			.stocksId(Stocks.builder().id(stocks.getId()).build())
+			.build()
+			.save();
+			}
+		}
+		
+		int newStockId =  0;//Stocks.save(stocks).getId();
+		URI uri = new URI("/add/" + newStockId);
+		return Response.created(uri).build();
+	}
+	
+	@GET
+	@Path("/department/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response department(@PathParam("id") int id) {
+		System.out.println("GET department " + id);
+		List<Stocks> sups =  new ArrayList<Stocks>();
+		
+		if(Department.KITCHEN.getId()==id) {
+			for(KitchenStocks s : KitchenStocks.getStocks()) {
+				Stocks st = Stocks.builder()
+						.id(s.getId())
+						.stockName(s.getStocksId().getStockName())
+						.barcode(s.getStocksId().getBarcode())
+						.isActive(s.getIsActive())
+						.hasUpdate(s.getHasUpdate())
+						.quantity(s.getQuantity())
+						.build();
+				sups.add(st);
+			}
+		}else if(Department.RESTAURANT.getId()==id) {
+			for(RestoStocks s : RestoStocks.getStocksAll()) {
+				Stocks st = Stocks.builder()
+						.id(s.getId())
+						.stockName(s.getStock().getStockName())
+						.barcode(s.getStock().getBarcode())
+						.isActive(s.getIsActive())
+						.hasUpdate(s.getHasUpdate())
+						.quantity(s.getQuantity())
+						.build();
+				sups.add(st);
+			}
+		}else if(Department.HOUSEKEEPING.getId()==id) {
+			for(HouseStocks s : HouseStocks.getStocksAll()) {
+				Stocks st = Stocks.builder()
+						.id(s.getId())
+						.stockName(s.getStocksId().getStockName())
+						.barcode(s.getStocksId().getBarcode())
+						.isActive(s.getIsActive())
+						.hasUpdate(s.getHasUpdate())
+						.quantity(s.getQuantity())
+						.build();
+				sups.add(st);
+			}
+		}else if(Department.STOCKROOM.getId()==id) {
+			sups = Stocks.getStocks();
+		}
+		
+		
+		if (sups != null) {
+			return Response.ok(sups, MediaType.APPLICATION_JSON).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+	}
+	
+	
+} 

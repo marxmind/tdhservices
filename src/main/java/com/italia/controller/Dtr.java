@@ -153,7 +153,7 @@ public class Dtr {
 				+ "ca,"
 				+ "iscompleted,"
 				+ "otherAddAmount)" 
-				+ "values(?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ " values(?,?,?,?,?,?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -227,7 +227,7 @@ public class Dtr {
 				+ "ca,"
 				+ "iscompleted,"
 				+ "otherAddAmount)" 
-				+ "values(?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ " values(?,?,?,?,?,?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;

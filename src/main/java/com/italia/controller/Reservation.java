@@ -44,6 +44,14 @@ public class Reservation {
 	private int user;
 	private int sms;
 	
+	private int adultCount;
+	private int childCount;
+	private String vehiclePlates;
+	
+	private int status;
+	private String timeCheckIn;
+	private String timeCheckOut;
+	
 	public static List<Reservation> getCustomerNames(String name){
 		List<Reservation> rsvs = new ArrayList<Reservation>();
 		Connection conn = null;
@@ -87,6 +95,12 @@ public class Reservation {
 						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
 						.user(rs.getInt("userdtlsid"))
 						.sms(rs.getInt("smssend"))
+						.adultCount(rs.getInt("adultcount"))
+						.childCount(rs.getInt("childcount"))
+						.vehiclePlates(rs.getString("vehicleplates"))
+						.timeCheckIn(rs.getString("startTime"))
+						.timeCheckOut(rs.getString("endTime"))
+						.status(rs.getInt("iswholeday"))
 						.build();
 				
 				rsvs.add(rv);
@@ -145,6 +159,12 @@ public class Reservation {
 						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
 						.user(rs.getInt("userdtlsid"))
 						.sms(rs.getInt("smssend"))
+						.adultCount(rs.getInt("adultcount"))
+						.childCount(rs.getInt("childcount"))
+						.vehiclePlates(rs.getString("vehicleplates"))
+						.timeCheckIn(rs.getString("startTime"))
+						.timeCheckOut(rs.getString("endTime"))
+						.status(rs.getInt("iswholeday"))
 						.build();
 				
 				rsvs.add(rv);
@@ -200,8 +220,11 @@ public class Reservation {
 				+ "userid,"
 				+ "price,"
 				+ "cid,"
-				+ "smssend) " 
-				+ " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ "smssend,"
+				+ "adultcount,"
+				+ "childcount,"
+				+ "vehicleplates) " 
+				+ " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -229,9 +252,9 @@ public class Reservation {
 		ps.setString(cnt++, in.getCustomerName());
 		ps.setString(cnt++, in.getDescription());
 		ps.setString(cnt++, in.getDateCheckIn());
-		ps.setString(cnt++, "14.0");
+		ps.setString(cnt++, in.getTimeCheckIn());
 		ps.setString(cnt++, in.getDateCheckOut());
-		ps.setString(cnt++, "11.0");
+		ps.setString(cnt++, in.getTimeCheckOut());
 		ps.setInt(cnt++, typeRoom);
 		ps.setInt(cnt++, 1);
 		ps.setInt(cnt++, 1);
@@ -239,15 +262,18 @@ public class Reservation {
 		ps.setDouble(cnt++, in.getDownpayment());
 		ps.setLong(cnt++, in.getCustomerId());
 		ps.setInt(cnt++, in.getSms());
+		ps.setInt(cnt++, in.getAdultCount());
+		ps.setInt(cnt++, in.getChildCount());
+		ps.setString(cnt++, in.getVehiclePlates());
 		
 		LogU.add(in.getDateCheckIn());
 		LogU.add(in.getDateBooking());
 		LogU.add(in.getCustomerName());
 		LogU.add(in.getDescription());
 		LogU.add(in.getDateCheckIn());
-		LogU.add("14.0");
+		LogU.add(in.getTimeCheckIn());
 		LogU.add(in.getDateCheckOut());
-		LogU.add("11.0");
+		LogU.add(in.getTimeCheckOut());
 		LogU.add(typeRoom);
 		LogU.add(1);
 		LogU.add(1);
@@ -255,6 +281,9 @@ public class Reservation {
 		LogU.add(in.getDownpayment());
 		LogU.add(in.getCustomerId());
 		LogU.add(in.getSms());
+		LogU.add(in.getAdultCount());
+		LogU.add(in.getChildCount());
+		LogU.add(in.getVehiclePlates());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -284,7 +313,10 @@ public class Reservation {
 				+ "userid=?,"
 				+ "price=?,"
 				+ "cid=?,"
-				+ "smssend=? " 
+				+ "smssend=?,"
+				+ "adultcount=?,"
+				+ "childcount=?,"
+				+ "vehicleplates=? " 
 				+ " WHERE rid=?";
 		
 		PreparedStatement ps = null;
@@ -304,15 +336,18 @@ public class Reservation {
 		ps.setString(cnt++, in.getCustomerName());
 		ps.setString(cnt++, in.getDescription());
 		ps.setString(cnt++, in.getDateCheckIn());
-		ps.setString(cnt++, "14.0");
+		ps.setString(cnt++, in.getTimeCheckIn());
 		ps.setString(cnt++, in.getDateCheckOut());
-		ps.setString(cnt++, "11.0");
+		ps.setString(cnt++, in.getTimeCheckOut());
 		ps.setInt(cnt++, typeRoom);
 		ps.setInt(cnt++, 1);
 		ps.setLong(cnt++, in.getUser());
 		ps.setDouble(cnt++, in.getDownpayment());
 		ps.setLong(cnt++, in.getCustomerId());
 		ps.setInt(cnt++, in.getSms());
+		ps.setInt(cnt++, in.getAdultCount());
+		ps.setInt(cnt++, in.getChildCount());
+		ps.setString(cnt++, in.getVehiclePlates());
 		ps.setLong(cnt++, in.getId());
 		
 		LogU.add(in.getDateCheckIn());
@@ -320,15 +355,18 @@ public class Reservation {
 		LogU.add(in.getCustomerName());
 		LogU.add(in.getDescription());
 		LogU.add(in.getDateCheckIn());
-		LogU.add("14.0");
+		LogU.add(in.getTimeCheckIn());
 		LogU.add(in.getDateCheckOut());
-		LogU.add("11.0");
+		LogU.add(in.getTimeCheckOut());
 		LogU.add(typeRoom);
 		LogU.add(1);
 		LogU.add(in.getUser());
 		LogU.add(in.getDownpayment());
 		LogU.add(in.getCustomerId());
 		LogU.add(in.getSms());
+		LogU.add(in.getAdultCount());
+		LogU.add(in.getChildCount());
+		LogU.add(in.getVehiclePlates());
 		LogU.add(in.getId());
 		
 		LogU.add("executing for saving...");
@@ -464,6 +502,24 @@ public class Reservation {
 			
 		}
 		
+		ps.executeUpdate();
+		ps.close();
+		DBConnect.close(conn);
+		}catch(SQLException s){}
+		
+	}
+	
+	public static void openUpdate(String sql){
+		
+		Connection conn = null;
+		PreparedStatement ps = null;
+		//String sql = "UPDATE reservation SET isactiveres=0 WHERE rid=?";
+		
+		//String[] params = new String[1];
+		//params[0] = getId()+"";
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement(sql);		
 		ps.executeUpdate();
 		ps.close();
 		DBConnect.close(conn);
