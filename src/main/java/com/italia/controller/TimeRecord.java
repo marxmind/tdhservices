@@ -44,6 +44,9 @@ public class TimeRecord {
 	private String fullname;
 	private int iscompleted;
 	private int hasupdate;
+	private String otStart;
+	private String otEnd;
+	private String imgurl;
 	
 	public static String checkAndChangeStartDutyIfPossible(long employeeId, String date, String actualDutyStart) {
 		
@@ -145,6 +148,8 @@ public class TimeRecord {
 						.time4("")
 						.time5("")
 						.time6("")
+						.otStart("")
+						.otEnd("")
 						.eid(0)
 						.iscompleted(0)
 						.hasupdate(0)
@@ -201,6 +206,10 @@ public class TimeRecord {
 						.time4(replaceAsteriskToColon(rs.getString("time4")))
 						.time5(replaceAsteriskToColon(rs.getString("time5")))
 						.time6(replaceAsteriskToColon(rs.getString("time6")))
+						
+						.otStart(replaceAsteriskToColon(rs.getString("otstart")))
+						.otEnd(replaceAsteriskToColon(rs.getString("otend")))
+						
 						.eid(rs.getLong("eid"))
 						.iscompleted(rs.getInt("iscompleted"))
 						.hasupdate(rs.getInt("hasupdate"))
@@ -322,6 +331,7 @@ public class TimeRecord {
 		return serverTime;
 	}
 	
+	
 public static TimeRecord recordTime(int eid, String date, String time) {
 		
 		TimeRecord client = TimeRecord.builder()
@@ -364,6 +374,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 						.time4(rs.getString("time4"))
 						.time5(rs.getString("time5"))
 						.time6(rs.getString("time6"))
+						.otStart(rs.getString("otstart"))
+						.otEnd(rs.getString("otend"))
 						.eid(rs.getLong("eid"))
 						.iscompleted(rs.getInt("iscompleted"))
 						.hasupdate(rs.getInt("hasupdate"))
@@ -451,6 +463,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 						.time4(TimeRecord.replaceAsteriskToColon(rs.getString("time4")))
 						.time5(TimeRecord.replaceAsteriskToColon(rs.getString("time5")))
 						.time6(TimeRecord.replaceAsteriskToColon(rs.getString("time6")))
+						.otStart(replaceAsteriskToColon(rs.getString("otstart")))
+						.otEnd(replaceAsteriskToColon(rs.getString("otend")))
 						.eid(rs.getLong("eid"))
 						.iscompleted(rs.getInt("iscompleted"))
 						.build();
@@ -498,6 +512,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 						.time4(TimeRecord.replaceAsteriskToColon(rs.getString("time4")))
 						.time5(TimeRecord.replaceAsteriskToColon(rs.getString("time5")))
 						.time6(TimeRecord.replaceAsteriskToColon(rs.getString("time6")))
+						.otStart(replaceAsteriskToColon(rs.getString("otstart")))
+						.otEnd(replaceAsteriskToColon(rs.getString("otend")))
 						.eid(rs.getLong("eid"))
 						.iscompleted(rs.getInt("iscompleted"))
 						.fullname(rs.getString("fullname"))
@@ -546,6 +562,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 						.time4(TimeRecord.replaceAsteriskToColon(rs.getString("time4")))
 						.time5(TimeRecord.replaceAsteriskToColon(rs.getString("time5")))
 						.time6(TimeRecord.replaceAsteriskToColon(rs.getString("time6")))
+						.otStart(replaceAsteriskToColon(rs.getString("otstart")))
+						.otEnd(replaceAsteriskToColon(rs.getString("otend")))
 						.eid(rs.getLong("eid"))
 						.iscompleted(rs.getInt("iscompleted"))
 						.fullname(rs.getString("fullname"))
@@ -594,6 +612,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 						.time4(TimeRecord.replaceAsteriskToColon(rs.getString("time4")))
 						.time5(TimeRecord.replaceAsteriskToColon(rs.getString("time5")))
 						.time6(TimeRecord.replaceAsteriskToColon(rs.getString("time6")))
+						.otStart(replaceAsteriskToColon(rs.getString("otstart")))
+						.otEnd(replaceAsteriskToColon(rs.getString("otend")))
 						.eid(rs.getLong("eid"))
 						.iscompleted(rs.getInt("iscompleted"))
 						.fullname(rs.getString("fullname"))
@@ -642,6 +662,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 						.time4(TimeRecord.replaceAsteriskToColon(rs.getString("time4")))
 						.time5(TimeRecord.replaceAsteriskToColon(rs.getString("time5")))
 						.time6(TimeRecord.replaceAsteriskToColon(rs.getString("time6")))
+						.otStart(replaceAsteriskToColon(rs.getString("otstart")))
+						.otEnd(replaceAsteriskToColon(rs.getString("otend")))
 						.eid(rs.getLong("eid"))
 						.iscompleted(rs.getInt("iscompleted"))
 						.fullname(rs.getString("fullname"))
@@ -708,8 +730,10 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 				+ "eid,"
 				+ "iscompleted,"
 				+ "isactivet,"
-				+ "hasupdate)" 
-				+ " values(?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ "hasupdate,"
+				+ "otstart,"
+				+ "otend)" 
+				+ " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -743,6 +767,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 		ps.setInt(cnt++, in.getIscompleted());
 		ps.setInt(cnt++, 1);
 		ps.setInt(cnt++, 0);
+		ps.setString(cnt++, in.getOtStart());
+		ps.setString(cnt++, in.getOtEnd());
 		
 		LogU.add(in.getDateTrans());
 		LogU.add(in.getTime1());
@@ -755,6 +781,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 		LogU.add(in.getIscompleted());
 		LogU.add(1);
 		LogU.add(0);
+		LogU.add(in.getOtStart());
+		LogU.add(in.getOtEnd());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -782,7 +810,9 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 				+ "time6=?,"
 				+ "eid=?,"
 				+ "iscompleted=?,"
-				+ "hasupdate=?"
+				+ "hasupdate=?,"
+				+ "otstart=?,"
+				+ "otend=? "
 				+ " WHERE id=?";
 		
 		PreparedStatement ps = null;
@@ -806,6 +836,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 		ps.setLong(cnt++, in.getEid());
 		ps.setInt(cnt++, in.getIscompleted());
 		ps.setInt(cnt++, 0);
+		ps.setString(cnt++, in.getOtStart());
+		ps.setString(cnt++, in.getOtEnd());
 		ps.setLong(cnt++, in.getId());
 		
 		LogU.add(in.getDateTrans());
@@ -818,6 +850,8 @@ public static TimeRecord recordTime(int eid, String date, String time) {
 		LogU.add(in.getEid());
 		LogU.add(in.getIscompleted());
 		LogU.add(0);
+		LogU.add(in.getOtStart());
+		LogU.add(in.getOtEnd());
 		LogU.add(in.getId());
 		
 		LogU.add("executing for saving...");

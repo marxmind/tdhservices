@@ -40,6 +40,11 @@ public class LSServices extends ResourceConfig {
 		packages(BreakfastItemServices.class.getPackage().getName());
 		packages(HorsebackServices.class.getPackage().getName());
 		packages(UpcomingEventServices.class.getPackage().getName());
+		packages(EmailServices.class.getPackage().getName());
+		packages(OrderSelectionServices.class.getPackage().getName());
+		packages(EmployeeContractServices.class.getPackage().getName());
+		packages(ReceivableServices.class.getPackage().getName());
+		packages(PayableServices.class.getPackage().getName());
 		System.out.println("end loading.......services");
 	}
 	

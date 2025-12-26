@@ -25,7 +25,8 @@ public class SupplierPayablesServices {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<SupplierPayables> list(@Context HttpHeaders headers){
 		System.out.println("Loading supplier payable...");
-		List<SupplierPayables> suppliers = SupplierPayables.getAll(1000);
+		//List<SupplierPayables> suppliers = SupplierPayables.getAll(500);
+		List<SupplierPayables> suppliers = SupplierPayables.getItems();
 		System.out.println("Loaded "+ suppliers.size() +" payables...");
 		return suppliers;
 	}
@@ -35,7 +36,7 @@ public class SupplierPayablesServices {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response get(@PathParam("name") String name) {
 		System.out.println("GET supplier payable " + name);
-		List<SupplierPayables> sups =  SupplierPayables.retrieve(" AND sup.fullname like '%"+ name +"%'", new String[0]);
+		List<SupplierPayables> sups =  SupplierPayables.retrieve(" AND (sup.fullname like '%"+ name +"%' OR tran.description like '%"+ name +"%') ORDER BY tran.stid DESC", new String[0]);
 		if (sups != null) {
 			return Response.ok(sups, MediaType.APPLICATION_JSON).build();
 		} else {
@@ -60,7 +61,8 @@ public class SupplierPayablesServices {
 	public Response delete(@PathParam("id") int id) {
 		System.out.println("GET payables id " + id);
 		Supplier.delete("UPDATE supplierpayables SET isactivest=0 WHERE stid=" + id, new String[0]);
-		List<SupplierPayables> rsvs =  SupplierPayables.retrieve(" ORDER BY stid DESC", new String[0]);
+		//List<SupplierPayables> rsvs =  SupplierPayables.retrieve(" ORDER BY stid DESC", new String[0]);
+		List<SupplierPayables> rsvs = SupplierPayables.getItems();
 		if (rsvs != null) {
 			return Response.ok(rsvs, MediaType.APPLICATION_JSON).build();
 		} else {

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import com.italia.db.conf.Conf;
 import com.italia.db.conf.DBConnect;
+import com.italia.enm.FormStatus;
+import com.italia.enm.FormType;
 import com.italia.enm.GatePassType;
 import com.italia.utils.DateUtils;
 import com.italia.utils.GlobalVar;
@@ -181,7 +183,7 @@ public class GatePass {
 				+ "eid,"
 				+ "checkissuedby,"
 				+ "timecheck)" 
-				+ "values(?,?,?,?,?,?,?,?,?)";
+				+ " values(?,?,?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -386,6 +388,7 @@ public class GatePass {
 		
 	}
 	
+	
 	public void delete(){
 		
 		Connection conn = null;
@@ -412,5 +415,34 @@ public class GatePass {
 		}catch(SQLException s){}
 		
 	}
+	
+	public static void updateEmployeeCredit(GatePass pass, FormType type) {
+		int department = Employee.getEmployeeDepartment(pass.getEid());
+		long id = FormProcess.getLatestId()==0? 1 : FormProcess.getLatestId() + 1;
+		
+		String sql = "INSERT INTO formprocess ("
+				+ "formid,"
+				+ "datetrans,"
+				+ "formtype,"
+				+ "amount,"
+				+ "purpose,"
+				+ "isactiveform,"
+				+ "isfinanceapproved,"
+				+ "ismanagerapproved,"
+				+ "isadminapproved,"
+				+ "eid,"
+				+ "departmentid,"
+				+ "userdtlsid,"
+				+ "formstatus) " 
+				+ "values("+ id +",'"+ pass.getDateTrans() +"',"+ type.getId() +","+ pass.getAmount() +",'"+ pass.getRemarks() +"',1,0,0,1,"+ pass.getEid() +","+ department +",1,"+ FormStatus.APPROVED_BY_ADMIN_OFFICER.getId() +")";
+		
+		
+		System.out.println("SQL SAVE: " + sql);
+		FormProcess.opensql(sql, null);
+		EmployeePayable.updateEmployeePayable(pass.getEid(), pass.getAmount(), "ADD");
+		
+		
+	}
+	
 	
 }

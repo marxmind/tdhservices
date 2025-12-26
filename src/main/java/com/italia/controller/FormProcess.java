@@ -33,6 +33,7 @@ import lombok.ToString;
 public class FormProcess {
 
 	private int id;
+	private int formType;
 	private String dateTrans;
 	private double amount;
 	private String purpose;
@@ -43,7 +44,7 @@ public class FormProcess {
 	public static List<FormProcess> getUnprocessedForms(){
 		List<FormProcess> forms = new ArrayList<FormProcess>();
 		
-		String sql = "SELECT ff.formid,ff.datetrans,ff.formstatus,ff.amount,ff.purpose,ee.eid, ee.fullname FROM formprocess ff, employees ee WHERE ff.isactiveform=1 AND ff.formstatus=" + FormStatus.FOR_APPROVAL.getId() +
+		String sql = "SELECT ff.formid,ff.formtype,ff.datetrans,ff.formstatus,ff.amount,ff.purpose,ee.eid, ee.fullname FROM formprocess ff, employees ee WHERE ff.isactiveform=1 AND ff.formstatus=" + FormStatus.FOR_APPROVAL.getId() +
 				" AND ff.eid=ee.eid ";
 		
 				Connection conn = null;
@@ -60,6 +61,7 @@ public class FormProcess {
 				while(rs.next()){
 					FormProcess form = builder()
 							.id(rs.getInt("formid"))
+							.formType(rs.getInt("formtype"))
 							.dateTrans(rs.getString("datetrans"))
 							.eid(rs.getInt("eid"))
 							.employee(rs.getString("fullname"))
@@ -82,8 +84,8 @@ public class FormProcess {
 	public static List<FormProcess> getEmployeeForms(int eid){
 		List<FormProcess> forms = new ArrayList<FormProcess>();
 		
-		String sql = "SELECT ff.formid,ff.datetrans,ff.formstatus,ff.amount,ff.purpose,ee.eid, ee.fullname FROM formprocess ff, employees ee WHERE ff.isactiveform=1 " +
-				" AND ff.eid=ee.eid AND ff.eid=" + eid + " ORDER BY ff.datetrans DESC LIMIT 20";
+		String sql = "SELECT ff.formid,ff.formtype,ff.datetrans,ff.formstatus,ff.amount,ff.purpose,ee.eid, ee.fullname FROM formprocess ff, employees ee WHERE ff.isactiveform=1 " +
+				" AND ff.eid=ee.eid AND ff.eid=" + eid + " ORDER BY ff.formid DESC LIMIT 20";
 		
 				Connection conn = null;
 				ResultSet rs = null;
@@ -99,6 +101,7 @@ public class FormProcess {
 				while(rs.next()){
 					FormProcess form = builder()
 							.id(rs.getInt("formid"))
+							.formType(rs.getInt("formtype"))
 							.dateTrans(rs.getString("datetrans"))
 							.eid(rs.getInt("eid"))
 							.employee(rs.getString("fullname"))
@@ -121,7 +124,7 @@ public class FormProcess {
 	public static List<FormProcess> getEmployeeByName(String name){
 		List<FormProcess> forms = new ArrayList<FormProcess>();
 		
-		String sql = "SELECT ff.formid,ff.datetrans,ff.formstatus,ff.amount,ff.purpose,ee.eid, ee.fullname FROM formprocess ff, employees ee WHERE ff.isactiveform=1 " +
+		String sql = "SELECT ff.formid,ff.formtype,ff.datetrans,ff.formstatus,ff.amount,ff.purpose,ee.eid, ee.fullname FROM formprocess ff, employees ee WHERE ff.isactiveform=1 " +
 				" AND ff.eid=ee.eid AND ee.fullname like '%" + name + "%' ORDER BY ff.datetrans DESC LIMIT 20";
 		
 				Connection conn = null;
@@ -139,6 +142,7 @@ public class FormProcess {
 					FormProcess form = builder()
 							.id(rs.getInt("formid"))
 							.dateTrans(rs.getString("datetrans"))
+							.formType(rs.getInt("formtype"))
 							.eid(rs.getInt("eid"))
 							.employee(rs.getString("fullname"))
 							.amount(rs.getDouble("amount"))
@@ -223,7 +227,7 @@ public class FormProcess {
 		int department = Employee.getEmployeeDepartment(in.getEid());
 		
 		ps.setString(cnt++, in.getDateTrans());
-		ps.setInt(cnt++, FormType.CASH_ADVANCE.getId());
+		ps.setInt(cnt++,  in.getFormType());
 		ps.setDouble(cnt++, in.getAmount());
 		ps.setString(cnt++, in.getPurpose());
 		ps.setInt(cnt++, 1);
@@ -236,7 +240,7 @@ public class FormProcess {
 		ps.setInt(cnt++, FormStatus.FOR_APPROVAL.getId());
 		
 		LogU.add(in.getDateTrans());
-		LogU.add(FormType.CASH_ADVANCE.getId());
+		LogU.add(in.getFormType());
 		LogU.add(in.getAmount());
 		LogU.add(in.getPurpose());
 		LogU.add(1);
@@ -295,7 +299,7 @@ public class FormProcess {
 		}
 		
 		ps.setString(cnt++, in.getDateTrans());
-		ps.setInt(cnt++, FormType.CASH_ADVANCE.getId());
+		ps.setInt(cnt++, in.getFormType());
 		ps.setDouble(cnt++, in.getAmount());
 		ps.setString(cnt++, in.getPurpose());
 		if("Finance Approved".equalsIgnoreCase(in.getStatusName())) {
@@ -314,7 +318,7 @@ public class FormProcess {
 		ps.setInt(cnt++, in.getId());
 		
 		LogU.add(in.getDateTrans());
-		LogU.add(FormType.CASH_ADVANCE.getId());
+		LogU.add(in.getFormType());
 		LogU.add(in.getAmount());
 		LogU.add(in.getPurpose());
 		LogU.add(0);
@@ -438,6 +442,7 @@ public class FormProcess {
 		
 	}
 	
+	
 	public void delete(boolean retain){
 		
 		Connection conn = null;
@@ -463,6 +468,29 @@ public class FormProcess {
 		}
 		
 		ps.executeUpdate();
+		ps.close();
+		DBConnect.close(conn);
+		}catch(SQLException s){}
+		
+	}
+	
+public static void opensql(String sql, String[] params){
+		
+		Connection conn = null;
+		PreparedStatement ps = null;
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement(sql);
+		
+		if(params!=null && params.length>0){
+			
+			for(int i=0; i<params.length; i++){
+				ps.setString(i+1, params[i]);
+			}
+			
+		}
+		
+		ps.execute();
 		ps.close();
 		DBConnect.close(conn);
 		}catch(SQLException s){}

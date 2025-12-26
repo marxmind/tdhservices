@@ -28,27 +28,29 @@ import lombok.ToString;
 @ToString
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class User {
-	private int id;
-	private String username;
-	private String password;
-	private String fullName;
+public class EmployeeRequest {
+
+	private long id;
+	private String date;
+	private String employee;
+	private String requests;
+	private int status;
 	private int isActive;
-	private int accessLevel;
-	private int department;
-	private int eid;
-	private String passcode;
+	private long eid;
 	
-	public static List<User> getAllUser(){
-		List<User> users = new ArrayList<User>();
+	public static List<EmployeeRequest> retrive(String sql, String[] params){
+		List<EmployeeRequest> recs = new ArrayList<EmployeeRequest>();
 		Connection conn = null;
 		ResultSet rs = null;
 		PreparedStatement ps = null;
-		String[] params = new String[0];
-		String sql = "SELECT * FROM appuser WHERE isactiveu=1 ";
+		
+		String sqlTmp = "SELECT * FROM employeerequests WHERE isactiverq=1 ";
+		
+		sqlTmp = sqlTmp + sql;
+		
 		try{
 			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-			ps = conn.prepareStatement(sql);
+			ps = conn.prepareStatement(sqlTmp);
 			
 			if(params!=null && params.length>0){
 				
@@ -57,24 +59,21 @@ public class User {
 				}
 				
 			}
-			System.out.println("user: " + ps.toString());
+			System.out.println("employeerequests: " + ps.toString());
 			rs = ps.executeQuery();
 			
 			while(rs.next()){
-				
-				final User user = builder()
-						.id(rs.getInt("usid"))
-						.username(rs.getString("username"))
-						.password(rs.getString("password"))
-						.fullName(rs.getString("fullname"))
-						.isActive(rs.getInt("isactiveu"))
-						.accessLevel(rs.getInt("levelu"))
-						.department(rs.getInt("depid"))
-						.eid(rs.getInt("eid"))
-						.passcode(rs.getString("passcode"))
+				EmployeeRequest rr = builder()
+						.id(rs.getLong("rcid"))
+						.date(rs.getString("datereq"))
+						.employee(rs.getString("employee"))
+						.requests(rs.getString("requests"))
+						.status(rs.getInt("status"))
+						.isActive(rs.getInt("isactiverq"))
+						.eid(rs.getLong("eid"))
 						.build();
-				users.add(user);
 				
+				recs.add(rr);
 			}
 		
 			rs.close();
@@ -82,102 +81,43 @@ public class User {
 			DBConnect.close(conn);
 			}catch(Exception e){e.getMessage();}
 		
-		return users;
+		return recs;
 	}
 	
-	public static User getById(int id){
-		User user = new User();
-		Connection conn = null;
-		ResultSet rs = null;
-		PreparedStatement ps = null;
-		String[] params = new String[0];
-		String sql = "SELECT * FROM appuser WHERE isactiveu=1 AND usid=" + id;
-		try{
-			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-			ps = conn.prepareStatement(sql);
-			
-			if(params!=null && params.length>0){
-				
-				for(int i=0; i<params.length; i++){
-					ps.setString(i+1, params[i]);
-				}
-				
-			}
-			System.out.println("user: " + ps.toString());
-			rs = ps.executeQuery();
-			
-			while(rs.next()){
-				
-				user = builder()
-						.id(rs.getInt("usid"))
-						.username(rs.getString("username"))
-						.password(rs.getString("password"))
-						.fullName(rs.getString("fullname"))
-						.isActive(rs.getInt("isactiveu"))
-						.accessLevel(rs.getInt("levelu"))
-						.department(rs.getInt("depid"))
-						.eid(rs.getInt("eid"))
-						.build();
-				
-				
-			}
-		
-			rs.close();
-			ps.close();
-			DBConnect.close(conn);
-			}catch(Exception e){e.getMessage();}
-		
-		return user;
-	}
-	
-	public static User save(User st){
+	public static EmployeeRequest save(EmployeeRequest st){
 		if(st!=null){
 			LogU.open(true, GlobalVar.LOG_FOLDER);
-			long id = User.getInfo(st.getId() ==0? User.getLatestId()+1 : st.getId());
+			long id = EmployeeRequest.getInfo(st.getId() ==0? EmployeeRequest.getLatestId()+1 : st.getId());
 			LogU.add("checking for new added data");
 			if(id==1){
 				LogU.add("insert new Data ");
-				st = User.insertData(st, "1");
+				st = EmployeeRequest.insertData(st, "1");
 			}else if(id==2){
 				LogU.add("update Data ");
-				st = User.updateData(st);
+				st = EmployeeRequest.updateData(st);
 			}else if(id==3){
 				LogU.add("added new Data ");
-				st = User.insertData(st, "3");
+				st = EmployeeRequest.insertData(st, "3");
 			}
 			LogU.close();
 		}
 		return st;
 	}
 	
-	public void save(){
-		LogU.open(true, GlobalVar.LOG_FOLDER);
-		long id = getInfo(getId() ==0? getLatestId()+1 : getId());
-		LogU.add("checking for new added data");
-		if(id==1){
-			LogU.add("insert new Data ");
-			User.insertData(this, "1");
-		}else if(id==2){
-			LogU.add("update Data ");
-			User.updateData(this);
-		}else if(id==3){
-			LogU.add("added new Data ");
-			User.insertData(this, "3");
-		}
-		LogU.close();
+	public void save() {
+		save(this);
 	}
 	
-	public static User insertData(User st, String type){
-		String sql = "INSERT INTO appuser ("
-				+ "usid,"
-				+ "username,"
-				+ "password,"
-				+ "fullname,"
-				+ "isactiveu,"
-				+ "levelu,"
-				+ "depid,"
+	public static EmployeeRequest insertData(EmployeeRequest in, String type){
+		String sql = "INSERT INTO employeerequests ("
+				+ "rid,"
+				+ "datereq,"
+				+ "employee,"
+				+ "requests,"
+				+ "status,"
+				+ "isactiverq,"
 				+ "eid)" 
-				+ " VALUES(?,?,?,?,?,?,?,?)";
+				+ " values(?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -188,34 +128,31 @@ public class User {
 		int id =1;
 		int cnt = 1;
 		LogU.add("===========================START=========================");
-		LogU.add("inserting data into table appuser");
+		LogU.add("inserting data into table employeerequests");
 		if("1".equalsIgnoreCase(type)){
-			ps.setLong(cnt++, id);
-			st.setId(id);
-			LogU.add("id: 1");
+			ps.setInt(cnt++, id);
+			in.setId(id);
+			LogU.add("Logid: 1");
 		}else if("3".equalsIgnoreCase(type)){
 			id=getLatestId()+1;
-			ps.setLong(cnt++, id);
-			st.setId(id);
-			LogU.add("id: " + id);
+			ps.setInt(cnt++, id);
+			in.setId(id);
+			LogU.add("logid: " + id);
 		}
 		
+		ps.setString(cnt++, in.getDate());
+		ps.setString(cnt++, in.getEmployee());
+		ps.setString(cnt++, in.getRequests());
+		ps.setInt(cnt++, in.getStatus());
+		ps.setInt(cnt++, in.getIsActive());
+		ps.setLong(cnt++, in.getEid());
 		
-		ps.setString(cnt++, st.getUsername());
-		ps.setString(cnt++, st.getPassword());
-		ps.setString(cnt++, st.getFullName());
-		ps.setInt(cnt++, st.getIsActive());
-		ps.setInt(cnt++, st.getAccessLevel());
-		ps.setInt(cnt++, st.getDepartment());
-		ps.setInt(cnt++, st.getEid());
-		
-		LogU.add(st.getUsername());
-		LogU.add(st.getPassword());
-		LogU.add(st.getFullName());
-		LogU.add(st.getIsActive());
-		LogU.add(st.getAccessLevel());
-		LogU.add(st.getDepartment());
-		LogU.add(st.getEid());
+		LogU.add(in.getDate());
+		LogU.add(in.getEmployee());
+		LogU.add(in.getRequests());
+		LogU.add(in.getStatus());
+		LogU.add(in.getIsActive());
+		LogU.add(in.getEid());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -224,21 +161,21 @@ public class User {
 		DBConnect.close(conn);
 		LogU.add("data has been successfully saved...");
 		}catch(SQLException s){
-			LogU.add("error inserting data to appuser : " + s.getMessage());
+			LogU.add("error inserting data to employeerequests : " + s.getMessage());
 		}
 		LogU.add("===========================END=========================");
-		return st;
+		return in;
 	}
 	
-	public static User updateData(User st){
-		String sql = "UPDATE appuser SET"
-				+ "username=?,"
-				+ "password=?,"
-				+ "fullname=?,"
-				+ "levelu=?,"
-				+ "depid=?,"
+	public static EmployeeRequest updateData(EmployeeRequest in){
+		String sql = "UPDATE employeerequests SET "
+				+ "datereq=?,"
+				+ "employee=?,"
+				+ "requests=?,"
+				+ "status=?,"
+				+ "isactiverq=?,"
 				+ "eid=?" 
-				+ " WHERE usid=?";
+				+ " WHERE rid=?";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -246,26 +183,25 @@ public class User {
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		ps = conn.prepareStatement(sql);
-		
 		int cnt = 1;
 		LogU.add("===========================START=========================");
-		LogU.add("updating data into table appuser");
+		LogU.add("inserting data into table employeerequests");
 		
-		ps.setString(cnt++, st.getUsername());
-		ps.setString(cnt++, st.getPassword());
-		ps.setString(cnt++, st.getFullName());
-		ps.setInt(cnt++, st.getAccessLevel());
-		ps.setInt(cnt++, st.getDepartment());
-		ps.setInt(cnt++, st.getEid());
-		ps.setInt(cnt++, st.getId());
+		ps.setString(cnt++, in.getDate());
+		ps.setString(cnt++, in.getEmployee());
+		ps.setString(cnt++, in.getRequests());
+		ps.setInt(cnt++, in.getStatus());
+		ps.setInt(cnt++, in.getIsActive());
+		ps.setLong(cnt++, in.getEid());
+		ps.setLong(cnt++, in.getId());
 		
-		LogU.add(st.getUsername());
-		LogU.add(st.getPassword());
-		LogU.add(st.getFullName());
-		LogU.add(st.getAccessLevel());
-		LogU.add(st.getDepartment());
-		LogU.add(st.getEid());
-		LogU.add(st.getId());
+		LogU.add(in.getDate());
+		LogU.add(in.getEmployee());
+		LogU.add(in.getRequests());
+		LogU.add(in.getStatus());
+		LogU.add(in.getIsActive());
+		LogU.add(in.getEid());
+		LogU.add(in.getId());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -274,13 +210,11 @@ public class User {
 		DBConnect.close(conn);
 		LogU.add("data has been successfully saved...");
 		}catch(SQLException s){
-			LogU.add("error updating data to appuser : " + s.getMessage());
+			LogU.add("error inserting data to employeerequests : " + s.getMessage());
 		}
 		LogU.add("===========================END=========================");
-		return st;
+		return in;
 	}
-	
-	
 	
 	public static int getLatestId(){
 		int id =0;
@@ -289,13 +223,13 @@ public class User {
 		ResultSet rs = null;
 		String sql = "";
 		try{
-		sql="SELECT usid FROM appuser ORDER BY usid DESC LIMIT 1";	
+		sql="SELECT rid FROM employeerequests ORDER BY rid DESC LIMIT 1";	
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		prep = conn.prepareStatement(sql);	
 		rs = prep.executeQuery();
 		
 		while(rs.next()){
-			id = rs.getInt("usid");
+			id = rs.getInt("rid");
 		}
 		
 		rs.close();
@@ -342,7 +276,7 @@ public class User {
 		boolean result = false;
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-		ps = conn.prepareStatement("SELECT usid FROM appuser WHERE usid=?");
+		ps = conn.prepareStatement("SELECT rid FROM employeerequests WHERE rid=?");
 		ps.setLong(1, id);
 		rs = ps.executeQuery();
 		
@@ -386,7 +320,7 @@ public class User {
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
-		String sql = "UPDATE appuser SET isactiveu=0 WHERE usid=?";
+		String sql = "UPDATE employeerequests SET isactiverq=0 WHERE rid=?";
 		
 		String[] params = new String[1];
 		params[0] = getId()+"";
@@ -412,7 +346,7 @@ public class User {
 	public static boolean delete(int idx){
 		Connection conn = null;
 		PreparedStatement ps = null;
-		String sql = "UPDATE housestocks SET isactiveh=0 WHERE hid=" + idx;
+		String sql = "UPDATE employeerequests SET isactiverq=0 WHERE rid=" + idx;
 		try{
 			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 			ps = conn.prepareStatement(sql);

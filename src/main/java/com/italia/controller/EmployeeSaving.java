@@ -472,7 +472,7 @@ public class EmployeeSaving {
 		ps.setInt(cnt++, st.getSaveType());
 		ps.setDouble(cnt++, st.getAmount());
 		ps.setInt(cnt++, st.getIsActive());
-		ps.setInt(cnt++, st.getEmployee().getEid());
+		ps.setLong(cnt++, st.getEmployee().getEid());
 		ps.setLong(cnt++, st.getPaySlipId());
 		ps.setString(cnt++, st.getRemarks());
 		ps.setInt(cnt++,st.getWithdraw());
@@ -523,7 +523,7 @@ public class EmployeeSaving {
 		ps.setString(cnt++, st.getDateTrans());
 		ps.setInt(cnt++, st.getSaveType());
 		ps.setDouble(cnt++, st.getAmount());
-		ps.setInt(cnt++, st.getEmployee().getEid());
+		ps.setLong(cnt++, st.getEmployee().getEid());
 		ps.setLong(cnt++, st.getPaySlipId());
 		ps.setString(cnt++, st.getRemarks());
 		ps.setInt(cnt++,st.getWithdraw());

@@ -39,6 +39,27 @@ public class Food {
 	private String picture;
 	private int location;
 	
+	
+	public static boolean hasExistingTransaction(int id) {
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		try {
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement("SELECT * FROM fooditem WHERE isactiverepft=1 AND fid=" + id + " LIMIT 1");
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				return true;
+			}
+			
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+		}catch(Exception e) {}
+		return false;
+	}
+	
 	public static List<Food> getAllFood(){
 		List<Food> foods = new ArrayList<Food>();
 		Connection conn = null;

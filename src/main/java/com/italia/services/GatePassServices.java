@@ -1,13 +1,20 @@
 package com.italia.services;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import com.italia.controller.CashProcess;
+import com.italia.controller.Email;
+import com.italia.controller.Employee;
 import com.italia.controller.Fields;
+import com.italia.controller.FormProcess;
 import com.italia.controller.GatePass;
+import com.italia.enm.FormType;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -87,6 +94,31 @@ public class GatePassServices {
 		}
 		
 		
+	}
+	
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("addos")
+	public Response add(GatePass gate) throws URISyntaxException {
+		System.out.println("POST: " + gate.getId());
+		System.out.println("id: "+ gate.getId());
+		
+		int id = GatePass.save(gate).getId();
+		GatePass.updateEmployeeCredit(gate, FormType.EMPLOYEE_OS);
+		
+		/*List<GatePass> forms = GatePass.retrieve(" AND paz.eid=" + gate.getEid(), new String[0]);
+		if (forms != null) {
+			return Response.ok(forms, MediaType.APPLICATION_JSON).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}*/
+		//return Response.ok().build();
+		if(id>0) {
+			return Response.status(Response.Status.CREATED).build();
+		}else {
+			return Response.status(Response.Status.NOT_MODIFIED).build();
+		}
 	}
 	
 }

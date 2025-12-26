@@ -28,27 +28,33 @@ import lombok.ToString;
 @ToString
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class User {
-	private int id;
-	private String username;
-	private String password;
-	private String fullName;
+public class Payables {
+
+	private long id;
+	private String dateRec;
+	private String payee;
+	private String referenceNo;
+	private String description;
+	private double originalAmount;
+	private double paidAmount;
+	private double unpaidAmount;
+	private String remarks;
 	private int isActive;
-	private int accessLevel;
-	private int department;
-	private int eid;
-	private String passcode;
+	private String contactNo;
 	
-	public static List<User> getAllUser(){
-		List<User> users = new ArrayList<User>();
+	public static List<Payables> retrive(String sql, String[] params){
+		List<Payables> recs = new ArrayList<Payables>();
 		Connection conn = null;
 		ResultSet rs = null;
 		PreparedStatement ps = null;
-		String[] params = new String[0];
-		String sql = "SELECT * FROM appuser WHERE isactiveu=1 ";
+		
+		String sqlTmp = "SELECT * FROM payables WHERE isactivepy=1 ";
+		
+		sqlTmp = sqlTmp + sql;
+		
 		try{
 			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-			ps = conn.prepareStatement(sql);
+			ps = conn.prepareStatement(sqlTmp);
 			
 			if(params!=null && params.length>0){
 				
@@ -57,24 +63,26 @@ public class User {
 				}
 				
 			}
-			System.out.println("user: " + ps.toString());
+			System.out.println("payables: " + ps.toString());
 			rs = ps.executeQuery();
 			
 			while(rs.next()){
 				
-				final User user = builder()
-						.id(rs.getInt("usid"))
-						.username(rs.getString("username"))
-						.password(rs.getString("password"))
-						.fullName(rs.getString("fullname"))
-						.isActive(rs.getInt("isactiveu"))
-						.accessLevel(rs.getInt("levelu"))
-						.department(rs.getInt("depid"))
-						.eid(rs.getInt("eid"))
-						.passcode(rs.getString("passcode"))
+				Payables rr = builder()
+						.id(rs.getLong("pyid"))
+						.dateRec(rs.getString("daterec"))
+						.payee(rs.getString("payee"))
+						.referenceNo(rs.getString("referenceno"))
+						.originalAmount(rs.getDouble("originalamount"))
+						.paidAmount(rs.getDouble("paidamount"))
+						.unpaidAmount(rs.getDouble("unpaidamount"))
+						.description(rs.getString("description"))
+						.remarks(rs.getString("remarks"))
+						.isActive(rs.getInt("isactivepy"))
+						.contactNo(rs.getString("contactno"))
 						.build();
-				users.add(user);
 				
+				recs.add(rr);
 			}
 		
 			rs.close();
@@ -82,102 +90,47 @@ public class User {
 			DBConnect.close(conn);
 			}catch(Exception e){e.getMessage();}
 		
-		return users;
+		return recs;
 	}
 	
-	public static User getById(int id){
-		User user = new User();
-		Connection conn = null;
-		ResultSet rs = null;
-		PreparedStatement ps = null;
-		String[] params = new String[0];
-		String sql = "SELECT * FROM appuser WHERE isactiveu=1 AND usid=" + id;
-		try{
-			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-			ps = conn.prepareStatement(sql);
-			
-			if(params!=null && params.length>0){
-				
-				for(int i=0; i<params.length; i++){
-					ps.setString(i+1, params[i]);
-				}
-				
-			}
-			System.out.println("user: " + ps.toString());
-			rs = ps.executeQuery();
-			
-			while(rs.next()){
-				
-				user = builder()
-						.id(rs.getInt("usid"))
-						.username(rs.getString("username"))
-						.password(rs.getString("password"))
-						.fullName(rs.getString("fullname"))
-						.isActive(rs.getInt("isactiveu"))
-						.accessLevel(rs.getInt("levelu"))
-						.department(rs.getInt("depid"))
-						.eid(rs.getInt("eid"))
-						.build();
-				
-				
-			}
-		
-			rs.close();
-			ps.close();
-			DBConnect.close(conn);
-			}catch(Exception e){e.getMessage();}
-		
-		return user;
-	}
-	
-	public static User save(User st){
+	public static Payables save(Payables st){
 		if(st!=null){
 			LogU.open(true, GlobalVar.LOG_FOLDER);
-			long id = User.getInfo(st.getId() ==0? User.getLatestId()+1 : st.getId());
+			long id = Payables.getInfo(st.getId() ==0? Payables.getLatestId()+1 : st.getId());
 			LogU.add("checking for new added data");
 			if(id==1){
 				LogU.add("insert new Data ");
-				st = User.insertData(st, "1");
+				st = Payables.insertData(st, "1");
 			}else if(id==2){
 				LogU.add("update Data ");
-				st = User.updateData(st);
+				st = Payables.updateData(st);
 			}else if(id==3){
 				LogU.add("added new Data ");
-				st = User.insertData(st, "3");
+				st = Payables.insertData(st, "3");
 			}
 			LogU.close();
 		}
 		return st;
 	}
 	
-	public void save(){
-		LogU.open(true, GlobalVar.LOG_FOLDER);
-		long id = getInfo(getId() ==0? getLatestId()+1 : getId());
-		LogU.add("checking for new added data");
-		if(id==1){
-			LogU.add("insert new Data ");
-			User.insertData(this, "1");
-		}else if(id==2){
-			LogU.add("update Data ");
-			User.updateData(this);
-		}else if(id==3){
-			LogU.add("added new Data ");
-			User.insertData(this, "3");
-		}
-		LogU.close();
+	public void save() {
+		save(this);
 	}
 	
-	public static User insertData(User st, String type){
-		String sql = "INSERT INTO appuser ("
-				+ "usid,"
-				+ "username,"
-				+ "password,"
-				+ "fullname,"
-				+ "isactiveu,"
-				+ "levelu,"
-				+ "depid,"
-				+ "eid)" 
-				+ " VALUES(?,?,?,?,?,?,?,?)";
+	public static Payables insertData(Payables in, String type){
+		String sql = "INSERT INTO payables ("
+				+ "pyid,"
+				+ "daterec,"
+				+ "payee,"
+				+ "referenceno,"
+				+ "originalamount,"
+				+ "paidamount,"
+				+ "unpaidamount,"
+				+ "description,"
+				+ "remarks,"
+				+ "isactivepy,"
+				+ "contactno)" 
+				+ " values(?,?,?,?,?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -188,34 +141,39 @@ public class User {
 		int id =1;
 		int cnt = 1;
 		LogU.add("===========================START=========================");
-		LogU.add("inserting data into table appuser");
+		LogU.add("inserting data into table payables");
 		if("1".equalsIgnoreCase(type)){
-			ps.setLong(cnt++, id);
-			st.setId(id);
-			LogU.add("id: 1");
+			ps.setInt(cnt++, id);
+			in.setId(id);
+			LogU.add("Logid: 1");
 		}else if("3".equalsIgnoreCase(type)){
 			id=getLatestId()+1;
-			ps.setLong(cnt++, id);
-			st.setId(id);
-			LogU.add("id: " + id);
+			ps.setInt(cnt++, id);
+			in.setId(id);
+			LogU.add("logid: " + id);
 		}
 		
+		ps.setString(cnt++, in.getDateRec());
+		ps.setString(cnt++, in.getPayee());
+		ps.setString(cnt++, in.getReferenceNo());
+		ps.setDouble(cnt++, in.getOriginalAmount());
+		ps.setDouble(cnt++, in.getPaidAmount());
+		ps.setDouble(cnt++, in.getUnpaidAmount());
+		ps.setString(cnt++, in.getDescription());
+		ps.setString(cnt++, in.getRemarks());
+		ps.setInt(cnt++, in.getIsActive());
+		ps.setString(cnt++, in.getContactNo());
 		
-		ps.setString(cnt++, st.getUsername());
-		ps.setString(cnt++, st.getPassword());
-		ps.setString(cnt++, st.getFullName());
-		ps.setInt(cnt++, st.getIsActive());
-		ps.setInt(cnt++, st.getAccessLevel());
-		ps.setInt(cnt++, st.getDepartment());
-		ps.setInt(cnt++, st.getEid());
-		
-		LogU.add(st.getUsername());
-		LogU.add(st.getPassword());
-		LogU.add(st.getFullName());
-		LogU.add(st.getIsActive());
-		LogU.add(st.getAccessLevel());
-		LogU.add(st.getDepartment());
-		LogU.add(st.getEid());
+		LogU.add(in.getDateRec());
+		LogU.add(in.getPayee());
+		LogU.add(in.getReferenceNo());
+		LogU.add(in.getOriginalAmount());
+		LogU.add(in.getPaidAmount());
+		LogU.add(in.getUnpaidAmount());
+		LogU.add(in.getDescription());
+		LogU.add(in.getRemarks());
+		LogU.add(in.getIsActive());
+		LogU.add(in.getContactNo());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -224,21 +182,25 @@ public class User {
 		DBConnect.close(conn);
 		LogU.add("data has been successfully saved...");
 		}catch(SQLException s){
-			LogU.add("error inserting data to appuser : " + s.getMessage());
+			LogU.add("error inserting data to payables : " + s.getMessage());
 		}
 		LogU.add("===========================END=========================");
-		return st;
+		return in;
 	}
 	
-	public static User updateData(User st){
-		String sql = "UPDATE appuser SET"
-				+ "username=?,"
-				+ "password=?,"
-				+ "fullname=?,"
-				+ "levelu=?,"
-				+ "depid=?,"
-				+ "eid=?" 
-				+ " WHERE usid=?";
+	public static Payables updateData(Payables in){
+		String sql = "UPDATE payables SET "
+				+ "daterec=?,"
+				+ "payee=?,"
+				+ "referenceno=?,"
+				+ "originalamount=?,"
+				+ "paidamount=?,"
+				+ "unpaidamount=?,"
+				+ "description=?,"
+				+ "remarks=?,"
+				+ "isactivepy=?,"
+				+ "contactno=?" 
+				+ " WHERE pyid=?";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -246,26 +208,34 @@ public class User {
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		ps = conn.prepareStatement(sql);
-		
+
 		int cnt = 1;
 		LogU.add("===========================START=========================");
-		LogU.add("updating data into table appuser");
+		LogU.add("updating data into table payables");
 		
-		ps.setString(cnt++, st.getUsername());
-		ps.setString(cnt++, st.getPassword());
-		ps.setString(cnt++, st.getFullName());
-		ps.setInt(cnt++, st.getAccessLevel());
-		ps.setInt(cnt++, st.getDepartment());
-		ps.setInt(cnt++, st.getEid());
-		ps.setInt(cnt++, st.getId());
+		ps.setString(cnt++, in.getDateRec());
+		ps.setString(cnt++, in.getPayee());
+		ps.setString(cnt++, in.getReferenceNo());
+		ps.setDouble(cnt++, in.getOriginalAmount());
+		ps.setDouble(cnt++, in.getPaidAmount());
+		ps.setDouble(cnt++, in.getUnpaidAmount());
+		ps.setString(cnt++, in.getDescription());
+		ps.setString(cnt++, in.getRemarks());
+		ps.setInt(cnt++, in.getIsActive());
+		ps.setString(cnt++, in.getContactNo());
+		ps.setLong(cnt++, in.getId());
 		
-		LogU.add(st.getUsername());
-		LogU.add(st.getPassword());
-		LogU.add(st.getFullName());
-		LogU.add(st.getAccessLevel());
-		LogU.add(st.getDepartment());
-		LogU.add(st.getEid());
-		LogU.add(st.getId());
+		LogU.add(in.getDateRec());
+		LogU.add(in.getPayee());
+		LogU.add(in.getReferenceNo());
+		LogU.add(in.getOriginalAmount());
+		LogU.add(in.getPaidAmount());
+		LogU.add(in.getUnpaidAmount());
+		LogU.add(in.getDescription());
+		LogU.add(in.getRemarks());
+		LogU.add(in.getIsActive());
+		LogU.add(in.getContactNo());
+		LogU.add(in.getId());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -274,13 +244,11 @@ public class User {
 		DBConnect.close(conn);
 		LogU.add("data has been successfully saved...");
 		}catch(SQLException s){
-			LogU.add("error updating data to appuser : " + s.getMessage());
+			LogU.add("error updating data to payables : " + s.getMessage());
 		}
 		LogU.add("===========================END=========================");
-		return st;
+		return in;
 	}
-	
-	
 	
 	public static int getLatestId(){
 		int id =0;
@@ -289,13 +257,13 @@ public class User {
 		ResultSet rs = null;
 		String sql = "";
 		try{
-		sql="SELECT usid FROM appuser ORDER BY usid DESC LIMIT 1";	
+		sql="SELECT pyid FROM payables ORDER BY pyid DESC LIMIT 1";	
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		prep = conn.prepareStatement(sql);	
 		rs = prep.executeQuery();
 		
 		while(rs.next()){
-			id = rs.getInt("usid");
+			id = rs.getInt("pyid");
 		}
 		
 		rs.close();
@@ -342,7 +310,7 @@ public class User {
 		boolean result = false;
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-		ps = conn.prepareStatement("SELECT usid FROM appuser WHERE usid=?");
+		ps = conn.prepareStatement("SELECT pyid FROM payables WHERE pyid=?");
 		ps.setLong(1, id);
 		rs = ps.executeQuery();
 		
@@ -386,7 +354,7 @@ public class User {
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
-		String sql = "UPDATE appuser SET isactiveu=0 WHERE usid=?";
+		String sql = "UPDATE payables SET isactivepy=0 WHERE pyid=?";
 		
 		String[] params = new String[1];
 		params[0] = getId()+"";
@@ -412,7 +380,7 @@ public class User {
 	public static boolean delete(int idx){
 		Connection conn = null;
 		PreparedStatement ps = null;
-		String sql = "UPDATE housestocks SET isactiveh=0 WHERE hid=" + idx;
+		String sql = "UPDATE payables SET isactivepy=0 WHERE pyid=" + idx;
 		try{
 			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 			ps = conn.prepareStatement(sql);
@@ -425,5 +393,6 @@ public class User {
 		
 		return false;
 	}
+	
 	
 }

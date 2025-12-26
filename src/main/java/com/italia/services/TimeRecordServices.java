@@ -86,18 +86,21 @@ public class TimeRecordServices {
 	}
 	
 	@GET
-	@Path("/record/{eid}")
+	@Path("/record/{val}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response recordtime(@PathParam("eid") int eid) {
+	public Response recordtime(@PathParam("val") String val) {
 		System.out.println("GET time recording: " + eid);
-		String employeeName = Employee.getEmployeeName(eid);
-		if(employeeName!=null) {
+		//String employeeName = Employee.getEmployeeName(eid);
+		//Employee employee = Employee.getEmployee(eid);
+		Employee employee = Employee.getEmployeePasscode(val);
+		if(employee!=null) {
 			String currentTime = new SimpleDateFormat("HH:mm").format(new Date()); 
 			//record
-			TimeRecord time = TimeRecord.recordTime(eid, DateUtils.getCurrentDateYYYYMMDD(), currentTime);
+			TimeRecord time = TimeRecord.recordTime(employee.getEid(), DateUtils.getCurrentDateYYYYMMDD(), currentTime);
 			//get latest
 			time.setTime1(currentTime);
-			time.setTime2(employeeName);
+			time.setTime2(employee.getFullname());
+			time.setImgurl(employee.getImgurl());
 			
 			List<TimeRecord> times = new ArrayList<TimeRecord>();
 			times.add(time);

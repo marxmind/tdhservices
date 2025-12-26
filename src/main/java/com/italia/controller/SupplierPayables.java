@@ -9,6 +9,7 @@ import java.util.List;
 
 import com.italia.db.conf.Conf;
 import com.italia.db.conf.DBConnect;
+import com.italia.enm.DeliveryStatus;
 import com.italia.utils.GlobalVar;
 import com.italia.utils.LogU;
 
@@ -43,12 +44,42 @@ public class SupplierPayables {
 	
 	private Supplier supplier;
 	
+	public static List<SupplierPayables> getItems(){
+		String sql = " ORDER BY tran.stid DESC ";
+		
+		List<SupplierPayables> all = new ArrayList<SupplierPayables>();
+		
+		List<SupplierPayables> requested = retrieve(" AND tran.deliverystatus=" + DeliveryStatus.REQUEST.getId() + sql, new String[0]);
+		List<SupplierPayables> others = retrieve(" AND tran.deliverystatus!=" + DeliveryStatus.REQUEST.getId() + sql + " LIMIT 50", new String[0]);
+		
+		all.addAll(requested);
+		all.addAll(others);
+		
+		return all;
+	}
+	
 	public static List<SupplierPayables> getAll(int limit){
 		String sql = " ORDER BY tran.stid DESC ";
 		if(limit>0) {
 			sql += " LIMIT " + limit;
 		}
-		return retrieve(sql, new String[0]);
+		List<SupplierPayables> all = new ArrayList<SupplierPayables>();
+		List<SupplierPayables> requested = new ArrayList<SupplierPayables>();
+		List<SupplierPayables> others = new ArrayList<SupplierPayables>();
+		
+		for(SupplierPayables py : retrieve(sql, new String[0])) {
+			if(DeliveryStatus.REQUEST.getId()==py.getDeliveryStatus()) {
+				requested.add(py);
+			}else {
+				others.add(py);
+			}
+			
+		}
+		
+		all.addAll(requested);
+		all.addAll(others);
+		
+		return all;
 	}
 	
 	

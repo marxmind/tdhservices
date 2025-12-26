@@ -52,6 +52,115 @@ public class Reservation {
 	private String timeCheckIn;
 	private String timeCheckOut;
 	
+	public static List<Reservation> getManyTimesBooking(int numberOccured){
+		String sql = "SELECT title, count(cid) as occurrence, cid FROM  reservation GROUP BY cid HAVING count(cid) >= "+ numberOccured +" ORDER BY occurrence ";
+		List<Reservation> rsvs = new ArrayList<Reservation>();
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		
+		
+		try{
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement(sql);
+			System.out.println("Reservations PS: " + ps.toString());
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				
+				Reservation rv = Reservation.builder()
+						.id(rs.getLong("occurrence"))
+						.dateBooking("")
+						.dateCheckIn("")
+						.dateCheckOut("")
+						.customerId(rs.getInt("cid"))
+						.customerName(rs.getString("title"))
+						.description("")
+						.downpayment(0)
+						.roomName("")
+						.user(0)
+						.sms(0)
+						.adultCount(0)
+						.childCount(0)
+						.vehiclePlates("")
+						.timeCheckIn("")
+						.timeCheckOut("")
+						.status(0)
+						.build();
+				
+				rsvs.add(rv);
+				
+			}
+			
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+		}catch(Exception e){e.getMessage();}
+		
+		return rsvs;
+	}
+	
+	public static List<Reservation> getCustomerCid(long cid){
+		List<Reservation> rsvs = new ArrayList<Reservation>();
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		String tableRsv = "rsv";
+		String tableUser = "usr";
+		String tableCustomer = "cs";
+		String sql = "SELECT rsv.*,"
+				+ "usr.userdtlsid,usr.firstname,usr.middlename,usr.lastname,cs.*  "
+				+ "FROM reservation "+ tableRsv + ", userdtls "+ tableUser +", customerprofile "+ tableCustomer +" WHERE "+ tableRsv +".isactiveres=1 AND " +
+		tableRsv + ".userid= "+tableUser+".userdtlsid AND " +
+		tableRsv	+ ".cid=" + tableCustomer + ".cid "; 
+		
+		
+		sql += " AND "+ tableCustomer + ".cid="+ cid;
+		sql += " ORDER BY  " + tableRsv + ".startDate DESC";
+		
+		
+		try{
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement(sql);
+			System.out.println("Reservations PS: " + ps.toString());
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				
+				String desc = rs.getString("description").replace("\n", " ");
+				
+				Reservation rv = Reservation.builder()
+						.id(rs.getLong("rid"))
+						.dateBooking(rs.getString("dateTrans"))
+						.dateCheckIn(rs.getString("startDate"))
+						.dateCheckOut(rs.getString("endDate"))
+						.customerId(rs.getInt("cid"))
+						.customerName(rs.getString("fullname"))
+						.description(desc)
+						.downpayment(rs.getDouble("price"))
+						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
+						.user(rs.getInt("userdtlsid"))
+						.sms(rs.getInt("smssend"))
+						.adultCount(rs.getInt("adultcount"))
+						.childCount(rs.getInt("childcount"))
+						.vehiclePlates(rs.getString("vehicleplates"))
+						.timeCheckIn(rs.getString("startTime"))
+						.timeCheckOut(rs.getString("endTime"))
+						.status(rs.getInt("iswholeday"))
+						.build();
+				
+				rsvs.add(rv);
+			}
+			
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+			}catch(Exception e){e.getMessage();}
+		
+		
+		return rsvs;
+	}
+	
 	public static List<Reservation> getCustomerNames(String name){
 		List<Reservation> rsvs = new ArrayList<Reservation>();
 		Connection conn = null;

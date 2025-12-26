@@ -14,7 +14,6 @@ import com.italia.utils.LogU;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
-import jakarta.xml.bind.annotation.XmlRootElement;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,158 +25,81 @@ import lombok.ToString;
 @Data
 @Builder
 @ToString
-@XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
-public class User {
-	private int id;
-	private String username;
-	private String password;
-	private String fullName;
+public class OrderSelection {
+
+	private long id;
+	private String name;
+	private double qty;
+	private double price;
 	private int isActive;
-	private int accessLevel;
-	private int department;
-	private int eid;
-	private String passcode;
 	
-	public static List<User> getAllUser(){
-		List<User> users = new ArrayList<User>();
+	public static List<OrderSelection> getAll(){
+		String sql = "SELECT * FROM osselections WHERE isactiveos=1 ORDER BY nameos ";
+		List<OrderSelection> os = new ArrayList<OrderSelection>();
 		Connection conn = null;
 		ResultSet rs = null;
 		PreparedStatement ps = null;
-		String[] params = new String[0];
-		String sql = "SELECT * FROM appuser WHERE isactiveu=1 ";
+		
 		try{
 			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 			ps = conn.prepareStatement(sql);
-			
-			if(params!=null && params.length>0){
-				
-				for(int i=0; i<params.length; i++){
-					ps.setString(i+1, params[i]);
-				}
-				
-			}
-			System.out.println("user: " + ps.toString());
+			System.out.println("OrderSelection PS: " + ps.toString());
 			rs = ps.executeQuery();
 			
 			while(rs.next()){
 				
-				final User user = builder()
-						.id(rs.getInt("usid"))
-						.username(rs.getString("username"))
-						.password(rs.getString("password"))
-						.fullName(rs.getString("fullname"))
-						.isActive(rs.getInt("isactiveu"))
-						.accessLevel(rs.getInt("levelu"))
-						.department(rs.getInt("depid"))
-						.eid(rs.getInt("eid"))
-						.passcode(rs.getString("passcode"))
+				OrderSelection o = builder()
+						.id(rs.getLong("osid"))
+						.name(rs.getString("nameos"))
+						.qty(rs.getDouble("qty"))
+						.price(rs.getDouble("price"))
+						.isActive(rs.getInt("isactiveos"))
 						.build();
-				users.add(user);
+				os.add(o);
 				
 			}
 		
 			rs.close();
 			ps.close();
 			DBConnect.close(conn);
-			}catch(Exception e){e.getMessage();}
+			}catch(Exception e){e.getMessage();}	
 		
-		return users;
-	}
+		return os;
+	}	
 	
-	public static User getById(int id){
-		User user = new User();
-		Connection conn = null;
-		ResultSet rs = null;
-		PreparedStatement ps = null;
-		String[] params = new String[0];
-		String sql = "SELECT * FROM appuser WHERE isactiveu=1 AND usid=" + id;
-		try{
-			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-			ps = conn.prepareStatement(sql);
-			
-			if(params!=null && params.length>0){
-				
-				for(int i=0; i<params.length; i++){
-					ps.setString(i+1, params[i]);
-				}
-				
-			}
-			System.out.println("user: " + ps.toString());
-			rs = ps.executeQuery();
-			
-			while(rs.next()){
-				
-				user = builder()
-						.id(rs.getInt("usid"))
-						.username(rs.getString("username"))
-						.password(rs.getString("password"))
-						.fullName(rs.getString("fullname"))
-						.isActive(rs.getInt("isactiveu"))
-						.accessLevel(rs.getInt("levelu"))
-						.department(rs.getInt("depid"))
-						.eid(rs.getInt("eid"))
-						.build();
-				
-				
-			}
-		
-			rs.close();
-			ps.close();
-			DBConnect.close(conn);
-			}catch(Exception e){e.getMessage();}
-		
-		return user;
-	}
-	
-	public static User save(User st){
+	public static OrderSelection save(OrderSelection st){
 		if(st!=null){
 			LogU.open(true, GlobalVar.LOG_FOLDER);
-			long id = User.getInfo(st.getId() ==0? User.getLatestId()+1 : st.getId());
+			long id = OrderSelection.getInfo(st.getId() ==0? OrderSelection.getLatestId()+1 : st.getId());
 			LogU.add("checking for new added data");
 			if(id==1){
 				LogU.add("insert new Data ");
-				st = User.insertData(st, "1");
+				st = OrderSelection.insertData(st, "1");
 			}else if(id==2){
 				LogU.add("update Data ");
-				st = User.updateData(st);
+				st = OrderSelection.updateData(st);
 			}else if(id==3){
 				LogU.add("added new Data ");
-				st = User.insertData(st, "3");
+				st = OrderSelection.insertData(st, "3");
 			}
 			LogU.close();
 		}
 		return st;
 	}
 	
-	public void save(){
-		LogU.open(true, GlobalVar.LOG_FOLDER);
-		long id = getInfo(getId() ==0? getLatestId()+1 : getId());
-		LogU.add("checking for new added data");
-		if(id==1){
-			LogU.add("insert new Data ");
-			User.insertData(this, "1");
-		}else if(id==2){
-			LogU.add("update Data ");
-			User.updateData(this);
-		}else if(id==3){
-			LogU.add("added new Data ");
-			User.insertData(this, "3");
-		}
-		LogU.close();
+	public void save() {
+		save(this);
 	}
 	
-	public static User insertData(User st, String type){
-		String sql = "INSERT INTO appuser ("
-				+ "usid,"
-				+ "username,"
-				+ "password,"
-				+ "fullname,"
-				+ "isactiveu,"
-				+ "levelu,"
-				+ "depid,"
-				+ "eid)" 
-				+ " VALUES(?,?,?,?,?,?,?,?)";
+	public static OrderSelection insertData(OrderSelection in, String type){
+		String sql = "INSERT INTO osselections ("
+				+ "osid,"
+				+ "nameos,"
+				+ "qty,"
+				+ "price,"
+				+ "isactiveos) " 
+				+ " values(?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -185,37 +107,30 @@ public class User {
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		ps = conn.prepareStatement(sql);
-		int id =1;
+		long id =1;
 		int cnt = 1;
 		LogU.add("===========================START=========================");
-		LogU.add("inserting data into table appuser");
+		LogU.add("inserting data into table osselections");
 		if("1".equalsIgnoreCase(type)){
 			ps.setLong(cnt++, id);
-			st.setId(id);
-			LogU.add("id: 1");
+			in.setId(Long.valueOf(id));
+			LogU.add("Logid: 1");
 		}else if("3".equalsIgnoreCase(type)){
 			id=getLatestId()+1;
 			ps.setLong(cnt++, id);
-			st.setId(id);
-			LogU.add("id: " + id);
+			in.setId(Long.valueOf(id));
+			LogU.add("logid: " + id);
 		}
 		
+		ps.setString(cnt++, in.getName());
+		ps.setDouble(cnt++, in.getQty());
+		ps.setDouble(cnt++, in.getPrice());
+		ps.setInt(cnt++, in.getIsActive());
 		
-		ps.setString(cnt++, st.getUsername());
-		ps.setString(cnt++, st.getPassword());
-		ps.setString(cnt++, st.getFullName());
-		ps.setInt(cnt++, st.getIsActive());
-		ps.setInt(cnt++, st.getAccessLevel());
-		ps.setInt(cnt++, st.getDepartment());
-		ps.setInt(cnt++, st.getEid());
-		
-		LogU.add(st.getUsername());
-		LogU.add(st.getPassword());
-		LogU.add(st.getFullName());
-		LogU.add(st.getIsActive());
-		LogU.add(st.getAccessLevel());
-		LogU.add(st.getDepartment());
-		LogU.add(st.getEid());
+		LogU.add(in.getName());
+		LogU.add(in.getQty());
+		LogU.add(in.getPrice());
+		LogU.add(in.getIsActive());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -224,21 +139,19 @@ public class User {
 		DBConnect.close(conn);
 		LogU.add("data has been successfully saved...");
 		}catch(SQLException s){
-			LogU.add("error inserting data to appuser : " + s.getMessage());
+			LogU.add("error inserting data to osselections : " + s.getMessage());
 		}
 		LogU.add("===========================END=========================");
-		return st;
+		return in;
 	}
 	
-	public static User updateData(User st){
-		String sql = "UPDATE appuser SET"
-				+ "username=?,"
-				+ "password=?,"
-				+ "fullname=?,"
-				+ "levelu=?,"
-				+ "depid=?,"
-				+ "eid=?" 
-				+ " WHERE usid=?";
+	public static OrderSelection updateData(OrderSelection in){
+		String sql = "UPDATE osselections SET "
+				+ "nameos=?,"
+				+ "qty=?,"
+				+ "price=?,"
+				+ "isactiveos=? " 
+				+ " WHERE osid=?";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -246,26 +159,21 @@ public class User {
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		ps = conn.prepareStatement(sql);
-		
 		int cnt = 1;
 		LogU.add("===========================START=========================");
-		LogU.add("updating data into table appuser");
+		LogU.add("updating data into table osselections");
 		
-		ps.setString(cnt++, st.getUsername());
-		ps.setString(cnt++, st.getPassword());
-		ps.setString(cnt++, st.getFullName());
-		ps.setInt(cnt++, st.getAccessLevel());
-		ps.setInt(cnt++, st.getDepartment());
-		ps.setInt(cnt++, st.getEid());
-		ps.setInt(cnt++, st.getId());
+		ps.setString(cnt++, in.getName());
+		ps.setDouble(cnt++, in.getQty());
+		ps.setDouble(cnt++, in.getPrice());
+		ps.setInt(cnt++, in.getIsActive());
+		ps.setLong(cnt++, in.getId());
 		
-		LogU.add(st.getUsername());
-		LogU.add(st.getPassword());
-		LogU.add(st.getFullName());
-		LogU.add(st.getAccessLevel());
-		LogU.add(st.getDepartment());
-		LogU.add(st.getEid());
-		LogU.add(st.getId());
+		LogU.add(in.getName());
+		LogU.add(in.getQty());
+		LogU.add(in.getPrice());
+		LogU.add(in.getIsActive());
+		LogU.add(in.getId());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -274,13 +182,11 @@ public class User {
 		DBConnect.close(conn);
 		LogU.add("data has been successfully saved...");
 		}catch(SQLException s){
-			LogU.add("error updating data to appuser : " + s.getMessage());
+			LogU.add("error updating data to osselections : " + s.getMessage());
 		}
 		LogU.add("===========================END=========================");
-		return st;
+		return in;
 	}
-	
-	
 	
 	public static int getLatestId(){
 		int id =0;
@@ -289,13 +195,13 @@ public class User {
 		ResultSet rs = null;
 		String sql = "";
 		try{
-		sql="SELECT usid FROM appuser ORDER BY usid DESC LIMIT 1";	
+		sql="SELECT osid FROM osselections ORDER BY osid DESC LIMIT 1";	
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		prep = conn.prepareStatement(sql);	
 		rs = prep.executeQuery();
 		
 		while(rs.next()){
-			id = rs.getInt("usid");
+			id = rs.getInt("osid");
 		}
 		
 		rs.close();
@@ -342,7 +248,7 @@ public class User {
 		boolean result = false;
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-		ps = conn.prepareStatement("SELECT usid FROM appuser WHERE usid=?");
+		ps = conn.prepareStatement("SELECT osid FROM osselections WHERE osid=?");
 		ps.setLong(1, id);
 		rs = ps.executeQuery();
 		
@@ -386,7 +292,7 @@ public class User {
 		
 		Connection conn = null;
 		PreparedStatement ps = null;
-		String sql = "UPDATE appuser SET isactiveu=0 WHERE usid=?";
+		String sql = "UPDATE osselections SET isactiveos=0 WHERE osid=?";
 		
 		String[] params = new String[1];
 		params[0] = getId()+"";
@@ -412,11 +318,11 @@ public class User {
 	public static boolean delete(int idx){
 		Connection conn = null;
 		PreparedStatement ps = null;
-		String sql = "UPDATE housestocks SET isactiveh=0 WHERE hid=" + idx;
+		String sql = "UPDATE osselections SET isactiveos=0 WHERE osid=" + idx;
 		try{
 			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 			ps = conn.prepareStatement(sql);
-			ps.execute();
+			ps.executeUpdate();
 			ps.close();
 			DBConnect.close(conn);
 			System.out.println("Executing deletion....");

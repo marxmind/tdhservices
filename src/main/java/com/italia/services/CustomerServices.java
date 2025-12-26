@@ -23,7 +23,7 @@ public class CustomerServices {
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<CustomerProfile> list(@Context HttpHeaders headers){
 		System.out.println("Loading customer...");
-		List<CustomerProfile> rsvs =  CustomerProfile.getAll(" ORDER BY cid DESC LIMIT 500");
+		List<CustomerProfile> rsvs =  CustomerProfile.getAll(" ORDER BY cid DESC");
 		System.out.println("Loaded "+ rsvs.size() +" current customer...");
 		return rsvs;
 	}

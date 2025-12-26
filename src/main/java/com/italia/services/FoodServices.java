@@ -4,6 +4,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import com.italia.controller.Food;
+import com.italia.controller.Supplier;
+import com.italia.controller.SupplierPayables;
+
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -87,17 +90,23 @@ public class FoodServices {
 		}
 	}
 	
-	@DELETE
-	@Consumes(MediaType.APPLICATION_JSON)
+	
+	@GET
+	@Path("/delete/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("{id}")
 	public Response delete(@PathParam("id") int id) {
-		System.out.println("DELETE");
-		System.out.println("Food Id:" + id);
-		if (Food.delete(id)) {
-			return Response.ok().build();					
-		} else {
-			return Response.notModified().build();
+		System.out.println("GET food id " + id);
+		if(Food.hasExistingTransaction(id)) {
+			List<Food> rsvs = Food.getAllFood();
+			return Response.ok(rsvs, MediaType.APPLICATION_JSON).build();
+		}else {
+			Supplier.delete("UPDATE food SET isactivefood=0 WHERE fid=" + id, new String[0]);
+			List<Food> rsvs = Food.getAllFood();
+			if (rsvs != null) {
+				return Response.ok(rsvs, MediaType.APPLICATION_JSON).build();
+			} else {
+				return Response.status(Response.Status.NOT_FOUND).build();
+			}
 		}
 	}
 	

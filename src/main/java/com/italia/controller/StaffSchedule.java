@@ -95,7 +95,7 @@ public class StaffSchedule {
 		String names[] = {"Mark Italia", "Matt Alvin", "Marilyn Cachuela"};
 		
 		
-		String sql = "SELECT day(aa.dayin) as day,aa.eid,  a.fullname as employee,aa.timestart FROM staffsched aa, employees a WHERE aa.isactivestaff=1 AND year(aa.dayin)=" + year + " AND month(aa.dayin)=" + month + " AND aa.eid=a.eid ORDER BY a.fullname";
+		String sql = "SELECT day(aa.dayin) as day,aa.eid,  a.fullname as employee,aa.timestart FROM staffsched aa, employees a WHERE a.dateresigned is null and aa.isactivestaff=1 AND year(aa.dayin)=" + year + " AND month(aa.dayin)=" + month + " AND aa.eid=a.eid ORDER BY a.fullname";
 		
 		Map<Integer, Map<Integer, String>> mapStaff = new LinkedHashMap<Integer, Map<Integer, String>>();
 		Map<Integer, String> mapDay = new LinkedHashMap<Integer, String>();

@@ -35,6 +35,32 @@ public class ReservationServices {
 	}
 
 	@GET
+	@Path("/occurrence/{num}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response occurrence(@PathParam("num") int num) {
+		System.out.println("GET reservation " + num);
+		List<Reservation> rsvs =  Reservation.getManyTimesBooking(num);
+		if (rsvs != null) {
+			return Response.ok(rsvs, MediaType.APPLICATION_JSON).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+	}
+	
+	@GET
+	@Path("/customerbookings/{id}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response bycustomerid(@PathParam("id") long id) {
+		System.out.println("GET reservation " + id);
+		List<Reservation> rsvs =  Reservation.getCustomerCid(id);
+		if (rsvs != null) {
+			return Response.ok(rsvs, MediaType.APPLICATION_JSON).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+	}
+	
+	@GET
 	@Path("/search/{date}")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response get(@PathParam("date") String date) {
