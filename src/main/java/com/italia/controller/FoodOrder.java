@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.italia.db.conf.Conf;
 import com.italia.db.conf.DBConnect;
@@ -151,14 +153,65 @@ public class FoodOrder {
 		
 	}
 	
+public static FoodOrder retrieveOrderReceiptNo(String receiptNo){
+		
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		FoodOrder order = null;
+		//String sql = "SELECT * FROM foodorder WHERE isactiverepor=1 AND orid=" + id;
+		String sql = "SELECT * FROM foodorder WHERE isactiverepor=1  AND recieptno='" + receiptNo+"'";
+		
+		
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement(sql);
+		
+		
+		System.out.println("form process sql: " + ps.toString());
+		rs = ps.executeQuery();
+		
+		while(rs.next()){
+			 order = FoodOrder.builder()
+					.id(rs.getLong("orid"))
+					.receiptno(rs.getString("recieptno"))
+					.date(rs.getString("ordate"))
+					.customerName(rs.getString("customername"))
+					.cashierId(rs.getLong("cashiereid"))
+					.waiterId(rs.getLong("waitereid"))
+					.subtotal(rs.getDouble("subtotal"))
+					.tax(rs.getDouble("tax"))
+					.discount(rs.getDouble("discount"))
+					.grandTotal(rs.getDouble("grandtotal"))
+					.cash(rs.getDouble("cash"))
+					.change(rs.getDouble("cashchange"))
+					.paymentType(rs.getInt("paymenttype"))
+					.isCompleted(rs.getInt("iscompleted"))
+					.isActive(rs.getInt("isactiverepor"))
+					.tableName(rs.getString("tablename"))
+					.notes(rs.getString("notes"))
+					.time(rs.getString("timerec"))
+					.items(FoodItem.retrieve(" AND i.orid=" + rs.getLong("orid"), new String[0]))
+					.build();
+		}
+		
+		rs.close();
+		ps.close(); 
+		DBConnect.close(conn);
+		}catch(Exception e){e.getMessage();}
+		
+		return order;
+		
+	}
+	
 	public static List<FoodOrder> retrieve(String sqlAdd, String[] params){
 		List<FoodOrder> items = new ArrayList<FoodOrder>();
 		Connection conn = null;
 		ResultSet rs = null;
 		PreparedStatement ps = null;
 		
-		//String sql = "SELECT * FROM foodorder WHERE isactiverepor=1 ";
-		String sql = "SELECT * FROM foodorder WHERE (isactiverepor=0 OR isactiverepor=1) ";
+		String sql = "SELECT * FROM foodorder WHERE isactiverepor=1 ";
+		//String sql = "SELECT * FROM foodorder WHERE (isactiverepor=0 OR isactiverepor=1) ";
 		sql = sql + sqlAdd;
 		
 		
@@ -243,7 +296,7 @@ public class FoodOrder {
 					.tableName(rs.getString("tablename"))
 					.notes(rs.getString("notes"))
 					.time(rs.getString("timerec"))
-					.items(FoodItem.retrieve(" AND i.orid=" + rs.getLong("orid"), params))
+					.items(FoodItem.retrieveCashierHistory(" AND i.orid=" + rs.getLong("orid"), params))
 					.build();
 			
 			items.add(item);
@@ -255,6 +308,109 @@ public class FoodOrder {
 		}catch(Exception e){e.getMessage();}
 		
 		return items;
+		
+	}
+	
+	/**
+	 * Fast shwoing
+	 */
+	public static List<FoodOrder> retrieveFast(String sqlAdd, String[] params){
+		List<FoodOrder> orders = new ArrayList<FoodOrder>();
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		
+		String sql = "SELECT * FROM foodorder o INNER JOIN fooditem fi ON o.orid=fi.orid AND fi.isactiverepft=1 INNER JOIN food f ON fi.fid=f.fid WHERE o.isactiverepor=1 ";
+		sql = sql + sqlAdd;
+		
+		
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement(sql);
+		
+		
+		System.out.println("retrieveHistoryNew form process sql: " + ps.toString());
+		rs = ps.executeQuery();
+		
+		Map<Long, List<FoodOrder>> mapData = new LinkedHashMap<Long, List<FoodOrder>>();
+		List<FoodOrder> foodItems = new ArrayList<FoodOrder>();
+		
+		while(rs.next()){
+			
+			FoodItem item = FoodItem.builder()
+					.id(rs.getLong("ftid"))
+					.date(rs.getString("dateitem"))
+					.qty(rs.getDouble("qty"))
+					.price(rs.getDouble("price"))
+					.foodOrderId(rs.getLong("orid"))
+					.isActive(rs.getInt("isactiverepft"))
+					.foodId(rs.getInt("fid"))
+					.foodName(rs.getString("foodname"))
+					.build();
+			
+			List<FoodItem> items = new ArrayList<FoodItem>();
+			items.add(item);
+			
+			FoodOrder order = FoodOrder.builder()
+					.id(rs.getLong("orid"))
+					.receiptno(rs.getString("recieptno"))
+					.date(rs.getString("ordate"))
+					.customerName(rs.getString("customername"))
+					.cashierId(rs.getLong("cashiereid"))
+					.waiterId(rs.getLong("waitereid"))
+					.subtotal(rs.getDouble("subtotal"))
+					.tax(rs.getDouble("tax"))
+					.discount(rs.getDouble("discount"))
+					.grandTotal(rs.getDouble("grandtotal"))
+					.cash(rs.getDouble("cash"))
+					.change(rs.getDouble("cashchange"))
+					.paymentType(rs.getInt("paymenttype"))
+					.isCompleted(rs.getInt("iscompleted"))
+					.isActive(rs.getInt("isactiverepor"))
+					.tableName(rs.getString("tablename"))
+					.notes(rs.getString("notes"))
+					.time(rs.getString("timerec"))
+					.items(items)
+					.build();
+			
+			
+			
+			long orid = rs.getLong("orid");
+			
+			if(mapData!=null) {
+				if(mapData.containsKey(orid)) {
+					mapData.get(orid).add(order);
+				}else {
+					foodItems = new ArrayList<FoodOrder>();
+					foodItems.add(order);
+					mapData.put(orid, foodItems);
+				}
+			}else {
+				foodItems.add(order);
+				mapData.put(orid, foodItems);
+			}
+			
+		}
+		
+		for(long id : mapData.keySet()) {
+			
+			List<FoodItem> items = new ArrayList<FoodItem>();
+			FoodOrder order = mapData.get(id).get(0);
+			for(FoodOrder or : mapData.get(id)) {
+				items.addAll(or.getItems());
+			}
+			order.setItems(items);
+			orders.add(order);
+			
+		}
+		
+		
+		rs.close();
+		ps.close(); 
+		DBConnect.close(conn);
+		}catch(Exception e){e.getMessage();}
+		
+		return orders;
 		
 	}
 	

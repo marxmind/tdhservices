@@ -10,10 +10,12 @@ import com.italia.controller.Employee;
 import com.italia.controller.Food;
 import com.italia.controller.TimeRecord;
 import com.italia.utils.DateUtils;
+import com.italia.utils.GlobalVar;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -52,7 +54,8 @@ public class TimeRecordServices {
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<TimeRecord> list(@Context HttpHeaders headers){
+	public List<TimeRecord> list(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass){
+		System.out.println("list>>>>>>>>>>>> bypas: " + bypass);
 		System.out.println("Loading time...");
 		List<TimeRecord> records =  TimeRecord.getUnprocessedDTR();
 		System.out.println("Loaded "+ records.size() +" records...");
@@ -62,7 +65,8 @@ public class TimeRecordServices {
 	@GET
 	@Path("/unprocessed/{date}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response loadlatest(@PathParam("date") String date) {
+	public Response loadlatest(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass, @PathParam("date") String date) {
+		System.out.println("load latest>>>>>>>>>>>> bypas: " + bypass);
 		System.out.println("GET Path id");
 		List<TimeRecord> times = TimeRecord.getByDate(date);
 		if (times != null) {
@@ -75,7 +79,8 @@ public class TimeRecordServices {
 	@GET
 	@Path("/time/{eid}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response employee(@PathParam("eid") int eid) {
+	public Response employee(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass, @PathParam("eid") int eid) {
+		System.out.println("employee search by eid>>>>>>>>>>>> bypas: " + bypass);
 		System.out.println("GET Path id");
 		List<TimeRecord> times = TimeRecord.getUnprocessedDTREmployee(eid);
 		if (times != null) {
@@ -88,7 +93,8 @@ public class TimeRecordServices {
 	@GET
 	@Path("/record/{val}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response recordtime(@PathParam("val") String val) {
+	public Response recordtime(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass, @PathParam("val") String val) {
+		System.out.println("record time>>>>>>>>>>>> bypas: " + bypass);
 		System.out.println("GET time recording: " + eid);
 		//String employeeName = Employee.getEmployeeName(eid);
 		//Employee employee = Employee.getEmployee(eid);
@@ -114,8 +120,10 @@ public class TimeRecordServices {
 	@GET
 	@Path("{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response get(@PathParam("id") int id) {
-		System.out.println("GET Path id");
+	public Response get(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass, @PathParam("id") int id) {
+		System.out.println("get>>>>>>>>>>>> bypas: " + bypass);
+		System.out.println("GET Path id: " + id);
+		
 		List<TimeRecord> times = TimeRecord.getUnprocessedDTR();
 		if (times != null) {
 			return Response.ok(times, MediaType.APPLICATION_JSON).build();
@@ -128,7 +136,10 @@ public class TimeRecordServices {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("add")
-	public Response add(TimeRecord time) throws URISyntaxException {
+	public Response add(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass, TimeRecord time) throws URISyntaxException {
+		
+		System.out.println("add>>>>>>>>>>>> bypas: " + bypass);
+		
 		System.out.println("POST");
 		
 		TimeRecord  tmp = time;
@@ -156,7 +167,12 @@ public class TimeRecordServices {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("{id}")
-	public Response update(@PathParam("id") int id, TimeRecord time) {
+	public Response update(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass, @PathParam("id") int id, TimeRecord time) {
+		
+		System.out.println("update Employee: " + time.getFullname());
+		System.out.println("update>>>>>>>>>>>> bypas: " + bypass);
+		
+		
 		time.setId(id);
 		
 		TimeRecord  tmp = time;
@@ -180,7 +196,10 @@ public class TimeRecordServices {
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("/delete/{id}")
-	public Response delete(@PathParam("id") int id) {
+	public Response delete(@HeaderParam(GlobalVar.HEADER_NGROK) String bypass, @PathParam("id") int id) {
+		
+		System.out.println("delete>>>>>>>>>>>> bypas: " + bypass);
+		
 		System.out.println("DELETE");
 		System.out.println("TimeRecord Id:" + id);
 		if (TimeRecord.delete(id)) {

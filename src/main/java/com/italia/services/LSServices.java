@@ -45,6 +45,11 @@ public class LSServices extends ResourceConfig {
 		packages(EmployeeContractServices.class.getPackage().getName());
 		packages(ReceivableServices.class.getPackage().getName());
 		packages(PayableServices.class.getPackage().getName());
+		packages(RequestSavingServices.class.getPackage().getName());
+		packages(PulseReportServices.class.getPackage().getName());
+		packages(UpdateResourceServices.class.getPackage().getName());
+		packages(EmployeeIssuedToolsServices.class.getPackage().getName());
+		packages(WindowsResourceUpdate.class.getPackage().getName());
 		System.out.println("end loading.......services");
 	}
 	

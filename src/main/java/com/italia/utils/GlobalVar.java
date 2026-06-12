@@ -1,8 +1,10 @@
 package com.italia.utils;
 
 import java.io.File;
-
 public class GlobalVar {
+	
+	public static final String HEADER_NGROK= "ngrok-skip-browser-warning";
+	
 	public static String smsMSG = "Hi <recepient>, we have successfully reserved your room <room>. For inquiry please call 09173072767. The Dreamweavers Hill";
 	public static String smsOnlineBookingResponeMSG = "Hi <recepient>, we have received your room <room>. For inquiry please call 09173072767. The Dreamweavers Hill";
 	public static final String USER_AGENT = "Mozilla/5.0";
@@ -16,4 +18,8 @@ public class GlobalVar {
 	public static final String APP_DATABASE_CONF = "C:"+SEP+APP_NAME+SEP+"conf"+SEP+"dbconf.max";
 	public static final String SECURITY_ENCRYPTION_FORMAT="utf-8";
 	public static final String LOG_FOLDER = PRIMARY_DRIVE + SEP + APP_NAME + SEP + "log" + SEP;
+	public static final String APP_CONF_FILE_NAME = "app.max"; 
+	public static final String APP_CONF_FILE = APP_CONF_DIR + APP_CONF_FILE_NAME;
+	public static final String APP_APK_FOLDER = PRIMARY_DRIVE + SEP + APP_NAME + SEP + "apk" + SEP;
+	
 }

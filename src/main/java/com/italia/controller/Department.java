@@ -63,6 +63,35 @@ public class Department {
 		return deps;
 	}
 	
+	public static Map<String, Department> loadAllDepartmentByName(){
+		Map<String, Department> deps = new LinkedHashMap<String, Department>();
+		
+		String sql = "SELECT * FROM department ORDER BY departmentname";
+		
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement(sql);
+		
+		rs = ps.executeQuery();
+		
+		while(rs.next()){
+			Department dep = Department.builder()
+					.id(rs.getInt("departmentid"))
+					.name(rs.getString("departmentname"))
+					.build();
+			deps.put(dep.getName(), dep);
+		}
+		rs.close();
+		ps.close();
+		DBConnect.close(conn);
+		}catch(Exception e){}
+		
+		return deps;
+	}
+	
 	public static List<Department> retrieve(String sql, String[] params){
 		List<Department> deps = new ArrayList<Department>();
 		String sq = "SELECT * FROM department ";

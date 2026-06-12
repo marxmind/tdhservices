@@ -419,6 +419,32 @@ public class FormProcess {
 		return result;
 	}
 	
+	
+	public static boolean isForApproval(long id, int formStatus) {
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		Connection conn = null;
+		boolean result = false;
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement("SELECT formid FROM formprocess WHERE formid=? AND formstatus=?");
+		ps.setLong(1, id);
+		ps.setInt(2, formStatus);
+		rs = ps.executeQuery();
+		
+		if(rs.next()){
+			result=true;
+		}
+		
+		rs.close();
+		ps.close();
+		DBConnect.close(conn);
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
 	public static void delete(String sql, String[] params){
 		
 		Connection conn = null;

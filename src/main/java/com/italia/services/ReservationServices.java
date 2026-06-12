@@ -28,9 +28,30 @@ public class ReservationServices {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Reservation> list(@Context HttpHeaders headers){
-		System.out.println("Loading gatepass...");
+		System.out.println("Loading reservation...");
 		List<Reservation> rsvs =  Reservation.getAll(0, 0, DateUtils.getCurrentDateYYYYMMDD());
 		System.out.println("Loaded "+ rsvs.size() +" current reservation...");
+		return rsvs;
+	}
+	
+
+	@GET
+	@Path("/year/{year}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Reservation> byyear(@PathParam("year") int year){
+		System.out.println("Loading reservation...");
+		List<Reservation> rsvs =  Reservation.getYear(year);
+		System.out.println("Loaded "+ rsvs.size() +" latest access reservation...");
+		return rsvs;
+	}
+	
+	@GET
+	@Path("/latest")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Reservation> latest(@Context HttpHeaders headers){
+		System.out.println("Loading reservation...");
+		List<Reservation> rsvs =  Reservation.getLatest();
+		System.out.println("Loaded "+ rsvs.size() +" latest access reservation...");
 		return rsvs;
 	}
 
@@ -149,8 +170,8 @@ public class ReservationServices {
 	@Path("saving")
 	public Response add(Reservation rs) throws URISyntaxException {
 		System.out.println("POST");
-		long newSupplierId =  Reservation.save(rs).getId();		
-		URI uri = new URI("/add/" + newSupplierId);
+		long id =  Reservation.save(rs).getId();		
+		URI uri = new URI("/add/" + id);
 		return Response.created(uri).build();
 	}
 	

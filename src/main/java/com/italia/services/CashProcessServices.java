@@ -49,6 +49,21 @@ public class CashProcessServices {
 		}
 	}
 	
+	@GET
+	@Path("/search/year/{param}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getYear(@PathParam("param") String param) {
+		System.out.println("GET search " + param);
+		String year = param.split(":")[0];
+		int userid = Integer.parseInt( param.split(":")[1]);
+		List<CashProcess> cash = CashProcess.getByYear(year, userid);
+		if (cash != null) {
+			return Response.ok(cash, MediaType.APPLICATION_JSON).build();
+		} else {
+			return Response.status(Response.Status.NOT_FOUND).build();
+		}
+	}
+	
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)

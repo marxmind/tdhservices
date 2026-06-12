@@ -5,7 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.italia.db.conf.Conf;
 import com.italia.db.conf.DBConnect;
@@ -38,6 +40,52 @@ public class User {
 	private int department;
 	private int eid;
 	private String passcode;
+	
+	public static Map<Integer, User> getAllUserMap(){
+		Map<Integer, User> users = new LinkedHashMap<Integer, User>();
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		String[] params = new String[0];
+		String sql = "SELECT * FROM appuser WHERE isactiveu=1 ";
+		try{
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement(sql);
+			
+			if(params!=null && params.length>0){
+				
+				for(int i=0; i<params.length; i++){
+					ps.setString(i+1, params[i]);
+				}
+				
+			}
+			System.out.println("user: " + ps.toString());
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				
+				final User user = builder()
+						.id(rs.getInt("usid"))
+						.username(rs.getString("username"))
+						.password(rs.getString("password"))
+						.fullName(rs.getString("fullname"))
+						.isActive(rs.getInt("isactiveu"))
+						.accessLevel(rs.getInt("levelu"))
+						.department(rs.getInt("depid"))
+						.eid(rs.getInt("eid"))
+						.passcode(rs.getString("passcode"))
+						.build();
+				users.put(user.getId(), user);
+				
+			}
+		
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+			}catch(Exception e){e.getMessage();}
+		
+		return users;
+	}
 	
 	public static List<User> getAllUser(){
 		List<User> users = new ArrayList<User>();

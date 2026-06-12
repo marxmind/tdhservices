@@ -38,7 +38,7 @@ public class Reservation {
 	private String dateCheckOut;
 	private String customerName;
 	private String description;
-	private double downpayment;
+	private double price;
 	private int customerId;
 	private String roomName;
 	private int user;
@@ -51,6 +51,11 @@ public class Reservation {
 	private int status;
 	private String timeCheckIn;
 	private String timeCheckOut;
+	
+	private int downMode;
+	private int otp;
+	private int confirmationCode;
+	private double downpayment;
 	
 	public static List<Reservation> getManyTimesBooking(int numberOccured){
 		String sql = "SELECT title, count(cid) as occurrence, cid FROM  reservation GROUP BY cid HAVING count(cid) >= "+ numberOccured +" ORDER BY occurrence ";
@@ -76,7 +81,7 @@ public class Reservation {
 						.customerId(rs.getInt("cid"))
 						.customerName(rs.getString("title"))
 						.description("")
-						.downpayment(0)
+						.price(0)
 						.roomName("")
 						.user(0)
 						.sms(0)
@@ -86,6 +91,10 @@ public class Reservation {
 						.timeCheckIn("")
 						.timeCheckOut("")
 						.status(0)
+						.downMode(0)
+						.otp(0)
+						.confirmationCode(0)
+						.downpayment(0)
 						.build();
 				
 				rsvs.add(rv);
@@ -137,7 +146,7 @@ public class Reservation {
 						.customerId(rs.getInt("cid"))
 						.customerName(rs.getString("fullname"))
 						.description(desc)
-						.downpayment(rs.getDouble("price"))
+						.price(rs.getDouble("price"))
 						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
 						.user(rs.getInt("userdtlsid"))
 						.sms(rs.getInt("smssend"))
@@ -147,6 +156,10 @@ public class Reservation {
 						.timeCheckIn(rs.getString("startTime"))
 						.timeCheckOut(rs.getString("endTime"))
 						.status(rs.getInt("iswholeday"))
+						.downMode(rs.getInt("downmode"))
+						.otp(rs.getInt("otp"))
+						.confirmationCode(rs.getInt("confirmationcode"))
+						.downpayment(rs.getDouble("downpayment"))
 						.build();
 				
 				rsvs.add(rv);
@@ -200,7 +213,7 @@ public class Reservation {
 						.customerId(rs.getInt("cid"))
 						.customerName(rs.getString("fullname"))
 						.description(desc)
-						.downpayment(rs.getDouble("price"))
+						.price(rs.getDouble("price"))
 						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
 						.user(rs.getInt("userdtlsid"))
 						.sms(rs.getInt("smssend"))
@@ -210,6 +223,10 @@ public class Reservation {
 						.timeCheckIn(rs.getString("startTime"))
 						.timeCheckOut(rs.getString("endTime"))
 						.status(rs.getInt("iswholeday"))
+						.downMode(rs.getInt("downmode"))
+						.otp(rs.getInt("otp"))
+						.confirmationCode(rs.getInt("confirmationcode"))
+						.downpayment(rs.getDouble("downpayment"))
 						.build();
 				
 				rsvs.add(rv);
@@ -264,7 +281,7 @@ public class Reservation {
 						.customerId(rs.getInt("cid"))
 						.customerName(rs.getString("fullname"))
 						.description(desc)
-						.downpayment(rs.getDouble("price"))
+						.price(rs.getDouble("price"))
 						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
 						.user(rs.getInt("userdtlsid"))
 						.sms(rs.getInt("smssend"))
@@ -274,6 +291,134 @@ public class Reservation {
 						.timeCheckIn(rs.getString("startTime"))
 						.timeCheckOut(rs.getString("endTime"))
 						.status(rs.getInt("iswholeday"))
+						.downMode(rs.getInt("downmode"))
+						.otp(rs.getInt("otp"))
+						.confirmationCode(rs.getInt("confirmationcode"))
+						.downpayment(rs.getDouble("downpayment"))
+						.build();
+				
+				rsvs.add(rv);
+			}
+			
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+			}catch(Exception e){e.getMessage();}
+		
+		
+		return rsvs;
+	}
+	
+	public static List<Reservation> getLatest(){
+		List<Reservation> rsvs = new ArrayList<Reservation>();
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		String tableRsv = "rsv";
+		String tableUser = "usr";
+		String tableCustomer = "cs";
+		String sql = "SELECT rsv.*,"
+				+ "usr.userdtlsid,usr.firstname,usr.middlename,usr.lastname,cs.*  "
+				+ "FROM reservation "+ tableRsv + ", userdtls "+ tableUser +", customerprofile "+ tableCustomer +" WHERE "+ tableRsv +".isactiveres=1 AND " +
+		tableRsv + ".userid= "+tableUser+".userdtlsid AND " +
+		tableRsv	+ ".cid=" + tableCustomer + ".cid "; 
+		
+		sql += " AND DATE(timestampsres) = CURDATE() ORDER BY rsv.timestampsres DESC";
+		
+		try{
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement(sql);
+			System.out.println("Reservations PS: " + ps.toString());
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				
+				String desc = rs.getString("description").replace("\n", " ");
+				
+				Reservation rv = Reservation.builder()
+						.id(rs.getLong("rid"))
+						.dateBooking(rs.getString("dateTrans"))
+						.dateCheckIn(rs.getString("startDate"))
+						.dateCheckOut(rs.getString("endDate"))
+						.customerId(rs.getInt("cid"))
+						.customerName(rs.getString("fullname"))
+						.description(desc)
+						.price(rs.getDouble("price"))
+						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
+						.user(rs.getInt("userdtlsid"))
+						.sms(rs.getInt("smssend"))
+						.adultCount(rs.getInt("adultcount"))
+						.childCount(rs.getInt("childcount"))
+						.vehiclePlates(rs.getString("vehicleplates"))
+						.timeCheckIn(rs.getString("startTime"))
+						.timeCheckOut(rs.getString("endTime"))
+						.status(rs.getInt("iswholeday"))
+						.downMode(rs.getInt("downmode"))
+						.otp(rs.getInt("otp"))
+						.confirmationCode(rs.getInt("confirmationcode"))
+						.downpayment(rs.getDouble("downpayment"))
+						.build();
+				
+				rsvs.add(rv);
+			}
+			
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+			}catch(Exception e){e.getMessage();}
+		
+		
+		return rsvs;
+	}
+	
+	public static List<Reservation> getYear(int year){
+		List<Reservation> rsvs = new ArrayList<Reservation>();
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		String tableRsv = "rsv";
+		String tableUser = "usr";
+		String tableCustomer = "cs";
+		String sql = "SELECT rsv.*,"
+				+ "usr.userdtlsid,usr.firstname,usr.middlename,usr.lastname,cs.*  "
+				+ "FROM reservation "+ tableRsv + ", userdtls "+ tableUser +", customerprofile "+ tableCustomer +" WHERE "+ tableRsv +".isactiveres=1 AND " +
+		tableRsv + ".userid= "+tableUser+".userdtlsid AND " +
+		tableRsv	+ ".cid=" + tableCustomer + ".cid "; 
+		
+		sql += " AND YEAR(startDate) = "+ year +" ORDER BY rsv.startDate";
+		
+		try{
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement(sql);
+			System.out.println("Reservations PS: " + ps.toString());
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				
+				String desc = rs.getString("description").replace("\n", " ");
+				
+				Reservation rv = Reservation.builder()
+						.id(rs.getLong("rid"))
+						.dateBooking(rs.getString("dateTrans"))
+						.dateCheckIn(rs.getString("startDate"))
+						.dateCheckOut(rs.getString("endDate"))
+						.customerId(rs.getInt("cid"))
+						.customerName(rs.getString("fullname"))
+						.description(desc)
+						.price(rs.getDouble("price"))
+						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
+						.user(rs.getInt("userdtlsid"))
+						.sms(rs.getInt("smssend"))
+						.adultCount(rs.getInt("adultcount"))
+						.childCount(rs.getInt("childcount"))
+						.vehiclePlates(rs.getString("vehicleplates"))
+						.timeCheckIn(rs.getString("startTime"))
+						.timeCheckOut(rs.getString("endTime"))
+						.status(rs.getInt("iswholeday"))
+						.downMode(rs.getInt("downmode"))
+						.otp(rs.getInt("otp"))
+						.confirmationCode(rs.getInt("confirmationcode"))
+						.downpayment(rs.getDouble("downpayment"))
 						.build();
 				
 				rsvs.add(rv);
@@ -332,8 +477,12 @@ public class Reservation {
 				+ "smssend,"
 				+ "adultcount,"
 				+ "childcount,"
-				+ "vehicleplates) " 
-				+ " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ "vehicleplates,"
+				+ "downmode,"
+				+ "otp,"
+				+ "confirmationcode,"
+				+ "downpayment) " 
+				+ " values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		
 		PreparedStatement ps = null;
 		Connection conn = null;
@@ -365,15 +514,19 @@ public class Reservation {
 		ps.setString(cnt++, in.getDateCheckOut());
 		ps.setString(cnt++, in.getTimeCheckOut());
 		ps.setInt(cnt++, typeRoom);
-		ps.setInt(cnt++, 1);
+		ps.setInt(cnt++, in.getStatus());
 		ps.setInt(cnt++, 1);
 		ps.setLong(cnt++, in.getUser());
-		ps.setDouble(cnt++, in.getDownpayment());
+		ps.setDouble(cnt++, in.getPrice());
 		ps.setLong(cnt++, in.getCustomerId());
 		ps.setInt(cnt++, in.getSms());
 		ps.setInt(cnt++, in.getAdultCount());
 		ps.setInt(cnt++, in.getChildCount());
 		ps.setString(cnt++, in.getVehiclePlates());
+		ps.setInt(cnt++, in.getDownMode());
+		ps.setInt(cnt++, in.getOtp());
+		ps.setInt(cnt++, in.getConfirmationCode());
+		ps.setDouble(cnt++, in.getDownpayment());
 		
 		LogU.add(in.getDateCheckIn());
 		LogU.add(in.getDateBooking());
@@ -384,15 +537,19 @@ public class Reservation {
 		LogU.add(in.getDateCheckOut());
 		LogU.add(in.getTimeCheckOut());
 		LogU.add(typeRoom);
-		LogU.add(1);
+		LogU.add(in.getStatus());
 		LogU.add(1);
 		LogU.add(in.getUser());
-		LogU.add(in.getDownpayment());
+		LogU.add(in.getPrice());
 		LogU.add(in.getCustomerId());
 		LogU.add(in.getSms());
 		LogU.add(in.getAdultCount());
 		LogU.add(in.getChildCount());
 		LogU.add(in.getVehiclePlates());
+		LogU.add(in.getDownMode());
+		LogU.add(in.getOtp());
+		LogU.add(in.getConfirmationCode());
+		LogU.add(in.getDownpayment());
 		
 		LogU.add("executing for saving...");
 		ps.execute();
@@ -425,7 +582,11 @@ public class Reservation {
 				+ "smssend=?,"
 				+ "adultcount=?,"
 				+ "childcount=?,"
-				+ "vehicleplates=? " 
+				+ "vehicleplates=?,"
+				+ "downmode=?,"
+				+ "otp=?,"
+				+ "confirmationcode=?,"
+				+ "downpayment=? " 
 				+ " WHERE rid=?";
 		
 		PreparedStatement ps = null;
@@ -449,14 +610,18 @@ public class Reservation {
 		ps.setString(cnt++, in.getDateCheckOut());
 		ps.setString(cnt++, in.getTimeCheckOut());
 		ps.setInt(cnt++, typeRoom);
-		ps.setInt(cnt++, 1);
+		ps.setInt(cnt++, in.getStatus());
 		ps.setLong(cnt++, in.getUser());
-		ps.setDouble(cnt++, in.getDownpayment());
+		ps.setDouble(cnt++, in.getPrice());
 		ps.setLong(cnt++, in.getCustomerId());
 		ps.setInt(cnt++, in.getSms());
 		ps.setInt(cnt++, in.getAdultCount());
 		ps.setInt(cnt++, in.getChildCount());
 		ps.setString(cnt++, in.getVehiclePlates());
+		ps.setInt(cnt++, in.getDownMode());
+		ps.setInt(cnt++, in.getOtp());
+		ps.setInt(cnt++, in.getConfirmationCode());
+		ps.setDouble(cnt++, in.getDownpayment());
 		ps.setLong(cnt++, in.getId());
 		
 		LogU.add(in.getDateCheckIn());
@@ -468,14 +633,18 @@ public class Reservation {
 		LogU.add(in.getDateCheckOut());
 		LogU.add(in.getTimeCheckOut());
 		LogU.add(typeRoom);
-		LogU.add(1);
+		LogU.add(in.getStatus());
 		LogU.add(in.getUser());
-		LogU.add(in.getDownpayment());
+		LogU.add(in.getPrice());
 		LogU.add(in.getCustomerId());
 		LogU.add(in.getSms());
 		LogU.add(in.getAdultCount());
 		LogU.add(in.getChildCount());
 		LogU.add(in.getVehiclePlates());
+		LogU.add(in.getDownMode());
+		LogU.add(in.getOtp());
+		LogU.add(in.getConfirmationCode());
+		LogU.add(in.getDownpayment());
 		LogU.add(in.getId());
 		
 		LogU.add("executing for saving...");

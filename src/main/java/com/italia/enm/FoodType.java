@@ -30,7 +30,8 @@ public enum FoodType {
 		APPETIZER(19, "Appetizers/Salad"),
 		BREAKFAST(20, "Breakfast"),
 		ACCOMMODATION(21, "Accommodation"),
-		LIQUOR(22, "LIQUOR");
+		LIQUOR(22, "Liquor"),
+		STAFF(23, "Staff");
 		
 		private int id;
 		private String name;

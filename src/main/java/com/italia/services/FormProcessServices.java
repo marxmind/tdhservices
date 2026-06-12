@@ -8,6 +8,7 @@ import com.italia.controller.CashAdvanceBalance;
 import com.italia.controller.EmployeePayable;
 import com.italia.controller.FormProcess;
 import com.italia.controller.TimeRecord;
+import com.italia.enm.FormStatus;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -118,16 +119,26 @@ public class FormProcessServices {
 		System.out.println("Updating:" + id);
 		System.out.println("id: "+ form.getId() +" name: " + form.getEmployee());
 		
-		if (FormProcess.save(form).getId()>0) {
-			
-			if("Finance Approved".equalsIgnoreCase(form.getStatusName()) ||
-					"Admin Approved".equalsIgnoreCase(form.getStatusName())) {
-				EmployeePayable.updateEmployeePayable(form.getEid(), form.getAmount(), "ADD");
+		boolean isForApproval = FormProcess.isForApproval(id, FormStatus.FOR_APPROVAL.getId());
+		
+		if(isForApproval) {
+			System.out.println("ok to update for approval");
+			FormProcess frm = FormProcess.save(form);
+			if (frm.getId()>0) {
+				
+				if("Finance Approved".equalsIgnoreCase(form.getStatusName()) ||
+						"Admin Approved".equalsIgnoreCase(form.getStatusName())) {
+					EmployeePayable.updateEmployeePayable(form.getEid(), form.getAmount(), "ADD");
+				}
+				
+				
+				return Response.ok().build();
+			} else {
+				return Response.notModified().build();
 			}
-			
-			
-			return Response.ok().build();
-		} else {
+		
+		}else {
+			System.out.println("already processed..");
 			return Response.notModified().build();
 		}
 	}

@@ -306,6 +306,49 @@ public class Employee {
 		return em;
 	}
 	
+	public static Employee  getEmployeeById(long id){
+		Employee em = null;
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		
+		String sql = "SELECT * FROM employees e, department d WHERE e.isactiveem=1 AND e.departmentid=d.departmentid AND e.dateresigned is NULL  AND  e.eid=" + id;
+		try{
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement(sql);
+			
+			
+			
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				 em = builder()
+						.eid(rs.getInt("eid"))
+						.fullname(rs.getString("fullname"))
+						.jobid(rs.getInt("jobid"))
+						.dateReg(rs.getString("dateReg"))
+						.dateResigned(rs.getString("dateresigned"))
+						.address(rs.getString("address"))
+						.birthdate(rs.getString("birthdate"))
+						.contactNo(rs.getString("contactno"))
+						.dailySalary(rs.getDouble("dailysalary"))
+						.department(rs.getString("departmentname"))
+						.qrcode(rs.getString("qrcode"))
+						.isActive(rs.getInt("isactiveem"))
+						.age(rs.getInt("age"))
+						.gender(rs.getInt("gender"))
+						.imgurl(rs.getString("imgurl"))
+						.build();
+			}
+		
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+			}catch(Exception e){e.getMessage();}
+		
+		return em;
+	}
+	
 	@Deprecated
 	public static Employee  getEmployee(int eid){
 		Employee em = null;

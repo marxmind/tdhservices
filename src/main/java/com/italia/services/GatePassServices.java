@@ -121,4 +121,20 @@ public class GatePassServices {
 		}
 	}
 	
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("bringhome")
+	public Response bringhome(GatePass gate) throws URISyntaxException {
+		System.out.println("POST: " + gate.getId());
+		System.out.println("id: "+ gate.getId());
+		
+		int id = GatePass.save(gate).getId();
+		if(id>0) {
+			return Response.status(Response.Status.CREATED).build();
+		}else {
+			return Response.status(Response.Status.NOT_MODIFIED).build();
+		}
+	}
+	
 }

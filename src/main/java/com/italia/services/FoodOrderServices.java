@@ -16,6 +16,7 @@ import com.italia.controller.KitchenOrder;
 import com.italia.db.conf.Conf;
 import com.italia.db.conf.DBConnect;
 import com.italia.enm.OrderStatus;
+import com.italia.utils.DateUtils;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -66,15 +67,114 @@ public class FoodOrderServices {
 	}
 	
 	@GET
+	@Path("/param/{val}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<FoodOrder> param(@PathParam("val") String val){
+		System.out.println("param val Loading food order...");
+		List<FoodOrder> itemsPaid =  new ArrayList<FoodOrder>();//FoodOrder.retrieve(" AND iscompleted="+ OrderStatus.COMPLETED.getId() + " ORDER BY orid DESC LIMIT 100", new String[0]);
+		
+		List<FoodOrder> itemsUnpaid = new ArrayList<FoodOrder>(); //FoodOrder.retrieve(" AND iscompleted="+ OrderStatus.FOR_SERVING.getId() +" ORDER BY orid DESC LIMIT 100", new String[0]);
+		
+		String[] pars = val.split(":");
+		String sql = "";
+		if("year".equalsIgnoreCase(pars[0])) {
+			sql = " AND year(o.ordate)=" + pars[1];
+		}else if("startlastyear".equalsIgnoreCase(pars[0])) {
+			sql = " AND year(o.ordate)>=" + pars[1];	
+		}else if("date".equalsIgnoreCase(pars[0])) {
+			sql = " AND o.ordate='" + pars[1]+"'";
+		}else if("month".equalsIgnoreCase(pars[0])) {
+			sql = " AND month(o.ordate)=" + pars[1] + " AND year(o.ordate)=" + DateUtils.getCurrentYear();
+		}else if("custom".equalsIgnoreCase(pars[0])) {
+			sql = " AND (o.ordate>='" + pars[1] + "' AND o.ordate<='" + pars[2] + "') ";
+		}
+		
+		
+		//List<FoodOrder> tmpItems =  FoodOrder.retrieve(sql + " ORDER BY orid DESC", new String[0]);
+		List<FoodOrder> tmpItems =  FoodOrder.retrieveFast(sql + " ORDER BY o.orid DESC", new String[0]);
+		List<FoodOrder> items = new ArrayList<FoodOrder>();
+		for(FoodOrder order : tmpItems) {
+			if(OrderStatus.FOR_SERVING.getId()==order.getIsCompleted()) {
+				itemsUnpaid.add(order);
+			}else {
+				itemsPaid.add(order);
+			}
+		}
+		items.addAll(itemsUnpaid);
+		items.addAll(itemsPaid);
+		System.out.println("done Loaded "+ items.size() +" food order...");
+		return items;
+	}
+	
+	@GET
+	@Path("unpaid")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<FoodOrder> unpaid(@Context HttpHeaders headers){
+		System.out.println("unpaid Loading food order...");
+		List<FoodOrder> itemsUnpaid = FoodOrder.retrieveFast(" AND o.iscompleted="+ OrderStatus.FOR_SERVING.getId() +" ORDER BY o.orid DESC", new String[0]);
+		System.out.println("done unpaid Loaded "+ itemsUnpaid.size() +" food order...");
+		return itemsUnpaid;
+	}
+	
+	@GET
+	@Path("/receiptno/{receiptno}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getReceipt(@PathParam("receiptno") String receiptno) {
+		System.out.println("retrieving receipt no " + receiptno);
+	    FoodOrder order = FoodOrder.retrieveOrderReceiptNo(receiptno);
+	    
+	    if (order == null) {
+	        // Returns a 404 Not Found
+	        return Response.status(Response.Status.NOT_FOUND)
+	                       .entity("Food Order with  receipt no" + receiptno + " not found")
+	                       .build();
+	    }
+
+	    // Returns a 200 OK with the object as the body
+	    return Response.ok(order).build();
+	}
+	
+	@GET
 	@Path("/cashier/history")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<FoodOrder> cashierHistory(@Context HttpHeaders headers){
+	public List<FoodOrder> cashierHistoryOld(@PathParam("eid") long eid){
 		System.out.println("all Loading food order...");
 		List<FoodOrder> itemsPaid =  new ArrayList<FoodOrder>();
 		
 		List<FoodOrder> itemsUnpaid = new ArrayList<FoodOrder>();
 		
-		List<FoodOrder> tmpItems =  FoodOrder.retrieveHistory(" ORDER BY orid DESC LIMIT 50", new String[0]);
+		String sql = " ORDER BY o.orid DESC LIMIT 1000";
+		
+		List<FoodOrder> tmpItems =  FoodOrder.retrieveFast(sql, new String[0]);
+		List<FoodOrder> items = new ArrayList<FoodOrder>();
+		for(FoodOrder order : tmpItems) {
+			if(OrderStatus.FOR_SERVING.getId()==order.getIsCompleted()) {
+				itemsUnpaid.add(order);
+			}else {
+				itemsPaid.add(order);
+			}
+		}
+		items.addAll(itemsUnpaid);
+		items.addAll(itemsPaid);
+		System.out.println("done Loaded "+ items.size() +" food order...");
+		return items;
+	}
+	
+	@GET
+	@Path("/cashier/history/{eid}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<FoodOrder> cashierHistory(@PathParam("eid") long eid){
+		System.out.println("all Loading food order...");
+		List<FoodOrder> itemsPaid =  new ArrayList<FoodOrder>();
+		
+		List<FoodOrder> itemsUnpaid = new ArrayList<FoodOrder>();
+		
+		String sql = " ORDER BY o.orid DESC LIMIT 1000";
+		if(eid>3) {
+			sql = " AND o.cashiereid="+ eid +" ORDER BY o.orid DESC LIMIT 1000";
+		}
+		
+		List<FoodOrder> tmpItems =  FoodOrder.retrieveFast(sql, new String[0]);
 		List<FoodOrder> items = new ArrayList<FoodOrder>();
 		for(FoodOrder order : tmpItems) {
 			if(OrderStatus.FOR_SERVING.getId()==order.getIsCompleted()) {

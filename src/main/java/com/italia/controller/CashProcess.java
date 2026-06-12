@@ -75,6 +75,48 @@ public class CashProcess {
 		return 0;
 	}
 	
+public static List<CashProcess> entranceAmountPerUser(String dateFrom, String dateTo, long userid, boolean enableUserId) {
+	Map<Integer, User> users = User.getAllUserMap();
+	List<CashProcess> cz = new ArrayList<CashProcess>();
+		String sql = "SELECT * FROM entrance WHERE isactiveent=1" + 
+				" AND (dateTrans>='"+ dateFrom +"' AND dateTrans<='"+ dateTo +"')";
+		
+		if(enableUserId) {
+			 sql += " AND userid=" + userid;
+		}
+		
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement(sql);
+		System.out.println("entranceAmountPerUser Entrance In retrieve: " + ps.toString());
+		rs = ps.executeQuery();
+		
+		while(rs.next()){
+			int eid = 0;
+			try {eid=users.get(rs.getInt("userid")).getEid();}catch(Exception e) {}
+			CashProcess c = builder()
+					.id(0)
+					.dateTrans(rs.getString("dateTrans"))
+					.cashType(CashType.ENTRANCE_TICKET.getName())
+					.description(rs.getString("Entrance Ticket"))
+					.amount(rs.getDouble("totalamount"))
+					.userid(rs.getInt("userid"))
+					.employeeid(eid)
+					.build();
+			cz.add(c);
+		}
+		
+		rs.close();
+		ps.close();
+		DBConnect.close(conn);
+		}catch(Exception e){}
+		
+		return cz;
+	}
+	
 	public static Map<Integer,Double> entranceAmountAllUser(String dateFrom, String dateTo) {
 		Map<Integer,Double> mapData = new LinkedHashMap<Integer, Double>();
 		String sql = "SELECT userid,sum(totalamount) as amount FROM entrance WHERE isactiveent=1" + 
@@ -86,7 +128,7 @@ public class CashProcess {
 		try{
 		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
 		ps = conn.prepareStatement(sql);
-		System.out.println("Entrance In retrieve: " + ps.toString());
+		System.out.println("entranceAmountAllUser Entrance In retrieve: " + ps.toString());
 		rs = ps.executeQuery();
 		
 		while(rs.next()){
@@ -99,6 +141,44 @@ public class CashProcess {
 		}catch(Exception e){}
 		
 		return mapData;
+	}
+	
+	public static List<CashProcess> entranceAllUser(String dateFrom, String dateTo) {
+		Map<Integer, User> users = User.getAllUserMap();
+		List<CashProcess> cz = new ArrayList<CashProcess>();
+		String sql = "SELECT * FROM entrance WHERE isactiveent=1" + 
+				" AND (dateTrans>='"+ dateFrom +"' AND dateTrans<='"+ dateTo +"')";
+		
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		try{
+		conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+		ps = conn.prepareStatement(sql);
+		System.out.println("Entrance In retrieve: " + ps.toString());
+		rs = ps.executeQuery();
+		
+		while(rs.next()){
+			int eid = 0;
+			try {eid = users.get(rs.getInt("userid")).getEid();}catch(Exception e) {}
+			CashProcess c = builder()
+					.id(0)
+					.dateTrans(rs.getString("dateTrans"))
+					.cashType(CashType.ENTRANCE_TICKET.getName())
+					.description(rs.getString("Entrance Ticket"))
+					.amount(rs.getDouble("totalamount"))
+					.userid(rs.getInt("userid"))
+					.employeeid(eid)
+					.build();
+			cz.add(c);
+		}
+		
+		rs.close();
+		ps.close();
+		DBConnect.close(conn);
+		}catch(Exception e){}
+		
+		return cz;
 	}
 	
 	public static List<CashProcess> getAll(){
@@ -197,6 +277,109 @@ public class CashProcess {
 			isEnableUserId=false;
 		}
 		String sql = "SELECT cid,dateTrans,description,amount,cashinamount,cashoutamount,cashtype,userid,employeeid FROM cashprocess WHERE isactivecash=1 AND dateTrans='"+ dateSelected+"'";
+		
+		if(userid>=3) {
+			sql +=" AND userid="+ userid;
+		}
+		
+		sql += " ORDER BY cashtype";
+		
+		try{
+			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+			ps = conn.prepareStatement(sql);
+			System.out.println("cshprocess PS: " + ps.toString());
+			rs = ps.executeQuery();
+			
+			while(rs.next()){
+				//System.out.println("rs.getDouble(amount)" + rs.getDouble("amount"));
+				double amount = 0d;
+				if(rs.getDouble("amount")>0) {
+					amount = rs.getDouble("amount");
+				}else if(rs.getDouble("cashinamount")>0) {
+					amount = rs.getDouble("cashinamount");
+				}else if(rs.getDouble("cashoutamount")>0) {
+					amount = rs.getDouble("cashoutamount");
+				}
+				
+				String type = CashType.containId(rs.getInt("cashtype")).getName();
+				
+				CashProcess ca = builder()
+						.id(rs.getInt("cid"))
+						.dateTrans(rs.getString("dateTrans"))
+						.description(rs.getString("description"))
+						.amount(amount)
+						.cashType(type)
+						.userid(rs.getInt("userid"))
+						.employeeid(rs.getInt("employeeid"))
+						.build();
+				
+				czs.add(ca);
+				
+				//System.out.println("type: " + ca.getCashType());
+			}
+			//System.out.println("SQL Loaded "+ czs.size() +" cashprocess...");
+			rs.close();
+			ps.close();
+			DBConnect.close(conn);
+			}catch(Exception e){e.getMessage();}
+		
+		
+		return czs;
+	}
+	
+	public static List<CashProcess> getByYear(String year, int userid){
+		List<CashProcess> czs = new ArrayList<CashProcess>();
+		boolean isEnableUserId = true;
+		
+		
+		String fromDate = year + "-01-01";
+		String toDate = year + "-12-31";
+		
+		if(userid==0) {
+			/*Map<Integer, Double> mapData = entranceAmountAllUser(fromDate, toDate);
+			for(int user : mapData.keySet()) {
+				CashProcess cax = builder()
+						.id(0)
+						.dateTrans(fromDate)
+						.description("Entrance")
+						.amount(mapData.get(user))
+						.cashType(CashType.ENTRANCE_TICKET.getName())
+						.userid(user)
+						.employeeid(1)
+						.build();
+				
+				czs.add(cax);
+			}*/
+			
+			List<CashProcess> ens = CashProcess.entranceAllUser(fromDate, toDate);
+			czs.addAll(ens);
+		}else {
+			if(userid<=3) {
+				isEnableUserId = false;
+			}
+			
+			/*double entrance = entranceAmount(fromDate, toDate, userid, isEnableUserId);
+			CashProcess cax = builder()
+					.id(0)
+					.dateTrans(fromDate)
+					.description("Entrance")
+					.amount(entrance)
+					.cashType(CashType.ENTRANCE_TICKET.getName())
+					.userid(userid)
+					.employeeid(1)
+					.build();*/
+			List<CashProcess> ens = CashProcess.entranceAmountPerUser(fromDate, toDate, userid, isEnableUserId);
+			czs.addAll(ens);
+		}
+		
+		Connection conn = null;
+		ResultSet rs = null;
+		PreparedStatement ps = null;
+		
+		if(userid<=3) {
+			isEnableUserId=false;
+		}
+		String sql = "SELECT cid,dateTrans,description,amount,cashinamount,cashoutamount,cashtype,userid,employeeid FROM cashprocess WHERE isactivecash=1 AND (dateTrans>='"+ fromDate+"' AND dateTrans<='"+ toDate +"')";
 		
 		if(userid>=3) {
 			sql +=" AND userid="+ userid;

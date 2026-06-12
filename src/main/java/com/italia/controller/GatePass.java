@@ -82,9 +82,9 @@ public class GatePass {
 	public static List<GatePass> getDate(String date, String userType) {
 		System.out.println("checking mode: " + userType);
 		if("KITCHEN".equalsIgnoreCase(userType)) {
-			return retrieve(" AND paz.datetrans='"+ date +"' AND paz.modetype=" + GatePassType.EMPLOYEE_OS.getId(), new String[0]);
+			return retrieve(" AND (paz.datetrans='"+ date +"' OR emp.qrcode='"+ date +"') AND paz.modetype=" + GatePassType.EMPLOYEE_OS.getId() + " ORDER BY paz.gid DESC", new String[0]);
 		}else {
-			return retrieve(" AND paz.datetrans='"+ date +"'", new String[0]);
+			return retrieve(" AND (paz.datetrans='"+ date +"' OR emp.qrcode='"+ date +"') ORDER BY paz.gid DESC", new String[0]);
 		}
 	}
 
