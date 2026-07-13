@@ -54,6 +54,16 @@ public class ReservationServices {
 		System.out.println("Loaded "+ rsvs.size() +" latest access reservation...");
 		return rsvs;
 	}
+	
+	@GET
+	@Path("/yesterdaytomorrow")
+	@Produces(MediaType.APPLICATION_JSON)
+	public List<Reservation> yesterdaytomorrow(@Context HttpHeaders headers){
+		System.out.println("Loading reservation...");
+		List<Reservation> rsvs =  Reservation.getYesterdayTomorrowReservations();
+		System.out.println("Loaded "+ rsvs.size() +" yesterdaytomorrow access reservation...");
+		return rsvs;
+	}
 
 	@GET
 	@Path("/occurrence/{num}")

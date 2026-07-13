@@ -189,7 +189,7 @@ public class Reservation {
 		tableRsv	+ ".cid=" + tableCustomer + ".cid "; 
 		
 		if(name==null) {
-			sql += " ORDER BY " + tableRsv + ".cid DESC LIMIT 20";
+			sql += " ORDER BY " + tableRsv + ".cid DESC LIMIT 100";
 		}else {
 			sql += " AND "+ tableCustomer + ".fullname like '%"+ name +"%'";
 			sql += " ORDER BY  "+ tableCustomer + ".fullname";
@@ -309,66 +309,151 @@ public class Reservation {
 		return rsvs;
 	}
 	
-	public static List<Reservation> getLatest(){
+	
+	// Get yesterday's reservations
+	public static List<Reservation> getYesterdayTomorrowReservations(){
+		
+		String dateCondition = " IN (CURDATE(), CURDATE() - INTERVAL 1 DAY, CURDATE() + INTERVAL 1 DAY) ";
+		
 		List<Reservation> rsvs = new ArrayList<Reservation>();
-		Connection conn = null;
-		ResultSet rs = null;
-		PreparedStatement ps = null;
-		String tableRsv = "rsv";
-		String tableUser = "usr";
-		String tableCustomer = "cs";
-		String sql = "SELECT rsv.*,"
-				+ "usr.userdtlsid,usr.firstname,usr.middlename,usr.lastname,cs.*  "
-				+ "FROM reservation "+ tableRsv + ", userdtls "+ tableUser +", customerprofile "+ tableCustomer +" WHERE "+ tableRsv +".isactiveres=1 AND " +
-		tableRsv + ".userid= "+tableUser+".userdtlsid AND " +
-		tableRsv	+ ".cid=" + tableCustomer + ".cid "; 
-		
-		sql += " AND DATE(timestampsres) = CURDATE() ORDER BY rsv.timestampsres DESC";
-		
-		try{
-			conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
-			ps = conn.prepareStatement(sql);
-			System.out.println("Reservations PS: " + ps.toString());
-			rs = ps.executeQuery();
-			
-			while(rs.next()){
-				
-				String desc = rs.getString("description").replace("\n", " ");
-				
-				Reservation rv = Reservation.builder()
-						.id(rs.getLong("rid"))
-						.dateBooking(rs.getString("dateTrans"))
-						.dateCheckIn(rs.getString("startDate"))
-						.dateCheckOut(rs.getString("endDate"))
-						.customerId(rs.getInt("cid"))
-						.customerName(rs.getString("fullname"))
-						.description(desc)
-						.price(rs.getDouble("price"))
-						.roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
-						.user(rs.getInt("userdtlsid"))
-						.sms(rs.getInt("smssend"))
-						.adultCount(rs.getInt("adultcount"))
-						.childCount(rs.getInt("childcount"))
-						.vehiclePlates(rs.getString("vehicleplates"))
-						.timeCheckIn(rs.getString("startTime"))
-						.timeCheckOut(rs.getString("endTime"))
-						.status(rs.getInt("iswholeday"))
-						.downMode(rs.getInt("downmode"))
-						.otp(rs.getInt("otp"))
-						.confirmationCode(rs.getInt("confirmationcode"))
-						.downpayment(rs.getDouble("downpayment"))
-						.build();
-				
-				rsvs.add(rv);
-			}
-			
-			rs.close();
-			ps.close();
-			DBConnect.close(conn);
-			}catch(Exception e){e.getMessage();}
-		
-		
-		return rsvs;
+	    Connection conn = null;
+	    ResultSet rs = null;
+	    PreparedStatement ps = null;
+	    String tableRsv = "rsv";
+	    String tableUser = "usr";
+	    String tableCustomer = "cs";
+	    String sql = "SELECT rsv.*,"
+	            + "usr.userdtlsid,usr.firstname,usr.middlename,usr.lastname,cs.*  "
+	            + "FROM reservation "+ tableRsv + ", userdtls "+ tableUser +", customerprofile "+ tableCustomer +" WHERE "+ tableRsv +".isactiveres=1 AND " +
+	    tableRsv + ".userid= "+tableUser+".userdtlsid AND " +
+	    tableRsv + ".cid=" + tableCustomer + ".cid ";
+	    
+	    sql += " AND DATE(startDate) " + dateCondition + " ORDER BY rsv.startDate DESC";
+	    
+	    try{
+	        conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+	        ps = conn.prepareStatement(sql);
+	        System.out.println("Reservations PS: " + ps.toString());
+	        rs = ps.executeQuery();
+	        
+	        while(rs.next()){
+	            
+	            String desc = rs.getString("description").replace("\n", " ");
+	            
+	            Reservation rv = Reservation.builder()
+	                    .id(rs.getLong("rid"))
+	                    .dateBooking(rs.getString("dateTrans"))
+	                    .dateCheckIn(rs.getString("startDate"))
+	                    .dateCheckOut(rs.getString("endDate"))
+	                    .customerId(rs.getInt("cid"))
+	                    .customerName(rs.getString("fullname"))
+	                    .description(desc)
+	                    .price(rs.getDouble("price"))
+	                    .roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
+	                    .user(rs.getInt("userdtlsid"))
+	                    .sms(rs.getInt("smssend"))
+	                    .adultCount(rs.getInt("adultcount"))
+	                    .childCount(rs.getInt("childcount"))
+	                    .vehiclePlates(rs.getString("vehicleplates"))
+	                    .timeCheckIn(rs.getString("startTime"))
+	                    .timeCheckOut(rs.getString("endTime"))
+	                    .status(rs.getInt("iswholeday"))
+	                    .downMode(rs.getInt("downmode"))
+	                    .otp(rs.getInt("otp"))
+	                    .confirmationCode(rs.getInt("confirmationcode"))
+	                    .downpayment(rs.getDouble("downpayment"))
+	                    .build();
+	            
+	            rsvs.add(rv);
+	        }
+	        
+	        rs.close();
+	        ps.close();
+	        DBConnect.close(conn);
+	        }catch(Exception e){
+	            e.printStackTrace();
+	        }
+	    
+	    return rsvs;
+	}
+	
+	// Get yesterday's reservations
+	public static List<Reservation> getYesterdayReservations(){
+	    return getReservationsByDate(" = CURDATE() - INTERVAL 1 DAY");
+	}
+
+	// Get tomorrow's reservations
+	public static List<Reservation> getTomorrowReservations(){
+	    return getReservationsByDate(" = CURDATE() + INTERVAL 1 DAY");
+	}
+	
+	//current date
+	public static List<Reservation> getLatest(){
+		 return getReservationsByDate("= CURDATE()");
+	}
+	
+	// Core method with date parameter
+	private static List<Reservation> getReservationsByDate(String dateCondition){
+	    List<Reservation> rsvs = new ArrayList<Reservation>();
+	    Connection conn = null;
+	    ResultSet rs = null;
+	    PreparedStatement ps = null;
+	    String tableRsv = "rsv";
+	    String tableUser = "usr";
+	    String tableCustomer = "cs";
+	    String sql = "SELECT rsv.*,"
+	            + "usr.userdtlsid,usr.firstname,usr.middlename,usr.lastname,cs.*  "
+	            + "FROM reservation "+ tableRsv + ", userdtls "+ tableUser +", customerprofile "+ tableCustomer +" WHERE "+ tableRsv +".isactiveres=1 AND " +
+	    tableRsv + ".userid= "+tableUser+".userdtlsid AND " +
+	    tableRsv + ".cid=" + tableCustomer + ".cid ";
+	    
+	    sql += " AND DATE(timestampsres) " + dateCondition + " ORDER BY rsv.timestampsres DESC";
+	    
+	    try{
+	        conn = DBConnect.getConnection(Conf.getInstance().getDatabaseMain());
+	        ps = conn.prepareStatement(sql);
+	        System.out.println("Reservations PS: " + ps.toString());
+	        rs = ps.executeQuery();
+	        
+	        while(rs.next()){
+	            
+	            String desc = rs.getString("description").replace("\n", " ");
+	            
+	            Reservation rv = Reservation.builder()
+	                    .id(rs.getLong("rid"))
+	                    .dateBooking(rs.getString("dateTrans"))
+	                    .dateCheckIn(rs.getString("startDate"))
+	                    .dateCheckOut(rs.getString("endDate"))
+	                    .customerId(rs.getInt("cid"))
+	                    .customerName(rs.getString("fullname"))
+	                    .description(desc)
+	                    .price(rs.getDouble("price"))
+	                    .roomName(ReservationType.containId(rs.getInt("scheduleType")).getName())
+	                    .user(rs.getInt("userdtlsid"))
+	                    .sms(rs.getInt("smssend"))
+	                    .adultCount(rs.getInt("adultcount"))
+	                    .childCount(rs.getInt("childcount"))
+	                    .vehiclePlates(rs.getString("vehicleplates"))
+	                    .timeCheckIn(rs.getString("startTime"))
+	                    .timeCheckOut(rs.getString("endTime"))
+	                    .status(rs.getInt("iswholeday"))
+	                    .downMode(rs.getInt("downmode"))
+	                    .otp(rs.getInt("otp"))
+	                    .confirmationCode(rs.getInt("confirmationcode"))
+	                    .downpayment(rs.getDouble("downpayment"))
+	                    .build();
+	            
+	            rsvs.add(rv);
+	        }
+	        
+	        rs.close();
+	        ps.close();
+	        DBConnect.close(conn);
+	        }catch(Exception e){
+	            e.printStackTrace();
+	        }
+	    
+	    return rsvs;
 	}
 	
 	public static List<Reservation> getYear(int year){

@@ -259,6 +259,60 @@ public class FoodOrderServices {
 		return Response.created(uri).build();
 	}
 	
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("addcheckinorder")
+	public Response addCheckInOrder(FoodOrder order) throws URISyntaxException {
+		System.out.println("addcheckinorder POST==================== " + order.getCustomerName());
+		long recId =  FoodOrder.save(order).getId();
+		//clean the items first
+		FoodItem.delete("DELETE FROM fooditem WHERE orid=" + recId, new String[0]);
+		//load the new one
+		for(FoodItem item : order.getItems()) { 
+			if(item.getQty()>0) {
+				item.setFoodOrderId(recId);   
+				item.save();
+			}
+		}
+		
+		FoodOrder updatedOrder = FoodOrder.retrieveOrder(recId);
+		for(FoodItem item : updatedOrder.getItems()) {
+			
+			
+			KitchenOrder kitData = KitchenOrder.retrieveOrderExisting(updatedOrder.getId(), item.getId(), item.getFoodId());
+			
+			if(kitData!=null) {
+				
+				kitData.setQty(item.getQty());
+				kitData.save();
+				
+			} else {
+			
+				KitchenOrder.builder()
+				.id(0)
+				.date(updatedOrder.getDate())
+				.time(updatedOrder.getTime())
+				.servingDate(updatedOrder.getDate())
+				.orderNumber("0")
+				.qty(item.getQty())
+				.progressIndicator(0.1)
+				.orderStatus(0)
+				.orderType(0)
+				.isActive(1)
+				.order(updatedOrder)
+				.item(item)
+				.food(Food.builder().fid(item.getFoodId()).build())
+				.build().save();
+			}
+		}
+		
+		
+		URI uri = new URI("/add/" + recId);
+	
+		return Response.created(uri).build();
+	}
+	
 	
 	@DELETE
 	@Consumes(MediaType.APPLICATION_JSON)
